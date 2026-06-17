@@ -24,6 +24,7 @@ sysinfo.txt
 
 # VS Code local workspace settings
 .vscode/
+.idea/
 
 # OS junk
 .DS_Store
