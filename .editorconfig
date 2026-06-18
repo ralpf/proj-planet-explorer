@@ -1,0 +1,4 @@
+root = true
+
+[*.cs]
+resharper_default_private_modifier = implicit

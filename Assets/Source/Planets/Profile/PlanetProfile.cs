@@ -7,6 +7,8 @@ namespace Planets.Profiles
     [CreateAssetMenu(fileName = "planet-profile", menuName = "Planet/Planet Profile")]
     public class PlanetProfile : ScriptableObject
     {
-        public double radius = 6371000.0 / 1000;
+        [SerializeField] double radius = 6371000.0 / 1000;
+
+        public double Radius => radius;
     }       
 }
