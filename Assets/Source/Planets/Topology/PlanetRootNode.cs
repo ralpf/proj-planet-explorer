@@ -8,6 +8,7 @@ using UnityEngine;
 
 namespace Planets.Topology
 {
+    /// <summary>Logical element representing the root object of a planet</summary>
     public class PlanetRootNode
     {
         PlanetFaceNode[] faces;
@@ -17,7 +18,7 @@ namespace Planets.Topology
         public PlanetGenerator Generator => generator;
 
 
-        public PlanetRootNode()
+        public void GenerateFaces()
         {
             faces = new[] {
                 new PlanetFaceNode(this, Vector3.right),
@@ -28,8 +29,7 @@ namespace Planets.Topology
                 new PlanetFaceNode(this, Vector3.back),
             };
 
-            foreach (var face in faces)
-                face.Generate();
+            foreach (var face in faces) face.GenerateChunks();
         }
     }
 }

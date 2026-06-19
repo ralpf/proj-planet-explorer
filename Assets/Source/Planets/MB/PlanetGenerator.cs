@@ -5,6 +5,8 @@ using Planets.DataBuffers;
 using UnityEngine;
 using Planets.Profiles;
 using Planets.Topology;
+using Extensions.UnityAPI;
+
 
 
 namespace Planets.MB
@@ -14,7 +16,8 @@ namespace Planets.MB
     {
         [SerializeField] PlanetChunkPool chunkPool;
         [SerializeField] PlanetProfile profile;
-        [SerializeField, Range(2, 128)] int resolution;
+        [SerializeField, Range(2, 128)] int resolution = 16;
+        [SerializeField] Material material;
 
 
         //public PlanetProfile Profile => profile;
@@ -29,18 +32,28 @@ namespace Planets.MB
         [ContextMenu("GENERATE")]
         public void Generate()
         {
-            Debug.LogError("destroy children here");
+            this.Clear();
+            // make logical nodes
             var rootNode = new PlanetRootNode();
-            
+            rootNode.GenerateFaces();
+            // make unity objects
             foreach (PlanetFaceNode faceNode in rootNode.Faces)
                 foreach (PlanetChunkNode chunkNode in faceNode.Chunks)
                 {
                     PlanetChunk chunkObject = chunkPool.Rent();
                     chunkObject.Recalculate(this.CreateChunkData(chunkNode));
+                    chunkObject.SetMaterial(material);
                 }
         }
 
-        public PlanetChunkData CreateChunkData(PlanetChunkNode chunkNode)
+        [ContextMenu("CLEAR")]
+        public void Clear()
+        {
+            this.transform.DestroyChildren();
+            chunkPool.Clear();
+        }
+
+        private PlanetChunkData CreateChunkData(PlanetChunkNode chunkNode)
         {
             int vertexCount = resolution * resolution;
 

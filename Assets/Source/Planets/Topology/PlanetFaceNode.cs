@@ -6,6 +6,7 @@ using UnityEngine;
 
 namespace Planets.Topology
 {
+    /// <summary>Logical element representing a face on a cube-sphere surface</summary>
     public class PlanetFaceNode
     {
         List<PlanetChunkNode> chunks = new();
@@ -22,10 +23,10 @@ namespace Planets.Topology
             LocalUp = localUp;
         }
 
-        public void Generate()
+        public void GenerateChunks()
         {
             chunks.Clear();
-            chunks.Add(new PlanetChunkNode(this, Vector2.zero, Vector2.up));
+            chunks.Add(new PlanetChunkNode(this, Vector2.zero, Vector2.one));
         }
     }
 }

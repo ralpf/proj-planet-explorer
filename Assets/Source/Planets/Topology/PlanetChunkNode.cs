@@ -5,6 +5,7 @@ using UnityEngine;
 
 namespace Planets.Topology
 {
+    /// <summary>Logical element representing a subdivisible portion of planet</summary>
     public class PlanetChunkNode
     {
         public PlanetFaceNode ParentFace { get; private set; }
