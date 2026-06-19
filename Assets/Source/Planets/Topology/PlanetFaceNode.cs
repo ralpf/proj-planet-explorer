@@ -9,11 +9,11 @@ namespace Planets.Topology
     /// <summary>Logical element representing a face on a cube-sphere surface</summary>
     public class PlanetFaceNode
     {
-        List<PlanetChunkNode> chunks = new();
         PlanetRootNode planetNode;
+        PlanetChunkNode rootChunk;  // subdivision level 0 chunk
 
-        public PlanetRootNode PlanetNode => planetNode; 
-        public IEnumerable<PlanetChunkNode> Chunks => chunks;
+        public PlanetRootNode PlanetNode => planetNode;
+        public PlanetChunkNode RootChunk => rootChunk;
         public Vector3 LocalUp { get; private set; }
 
 
@@ -25,8 +25,7 @@ namespace Planets.Topology
 
         public void GenerateChunks()
         {
-            chunks.Clear();
-            chunks.Add(new PlanetChunkNode(this, Vector2.zero, Vector2.one));
+            rootChunk = new PlanetChunkNode(0,this, null, Vector2.zero, Vector2.one);
         }
     }
 }

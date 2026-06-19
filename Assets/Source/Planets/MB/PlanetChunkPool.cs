@@ -28,12 +28,13 @@ namespace Planets.MB
         public void Clear()
         {
             pool.Clear();
+            createdCount = 0;
         }
 
         private PlanetChunk CreateNew()
         {
             if (!generator) generator = this.GetComponent<PlanetGenerator>();
-            var go = new GameObject($"Planet Chunk {++createdCount}");
+            var go = new GameObject($"[{++createdCount}] Planet Chunk L");
             go.transform.SetParent(this.transform, false);
             return go.AddComponent<PlanetChunk>();
         }

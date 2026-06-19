@@ -38,12 +38,11 @@ namespace Planets.MB
             rootNode.GenerateFaces();
             // make unity objects
             foreach (PlanetFaceNode faceNode in rootNode.Faces)
-                foreach (PlanetChunkNode chunkNode in faceNode.Chunks)
-                {
-                    PlanetChunk chunkObject = chunkPool.Rent();
-                    chunkObject.Recalculate(this.CreateChunkData(chunkNode));
-                    chunkObject.SetMaterial(material);
-                }
+            {
+                PlanetChunk chunkObject = chunkPool.Rent();
+                chunkObject.Recalculate(this.CreateChunkData(faceNode.RootChunk));
+                chunkObject.SetMaterial(material);
+            }
         }
 
         [ContextMenu("CLEAR")]

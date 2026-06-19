@@ -12,10 +12,9 @@ namespace Planets.Topology
     public class PlanetRootNode
     {
         PlanetFaceNode[] faces;
-        PlanetGenerator generator;
+
 
         public IEnumerable<PlanetFaceNode> Faces => faces;
-        public PlanetGenerator Generator => generator;
 
 
         public void GenerateFaces()
