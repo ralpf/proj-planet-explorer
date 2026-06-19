@@ -2,3 +2,6 @@ root = true
 
 [*.cs]
 resharper_default_private_modifier = implicit
+
+[*.cs]
+resharper_unity_performance_critical_code_invocation_highlighting = none

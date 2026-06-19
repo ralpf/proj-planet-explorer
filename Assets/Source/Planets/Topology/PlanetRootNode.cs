@@ -1,6 +1,7 @@
 // ReSharper disable CheckNamespace
 
 using System.Collections.Generic;
+using System.Linq;
 using Planets.MB;
 using UnityEngine;
 
@@ -28,7 +29,12 @@ namespace Planets.Topology
                 new PlanetFaceNode(this, Vector3.back),
             };
 
-            foreach (var face in faces) face.GenerateChunks();
+            foreach (var face in faces) face.GenerateRootChunk();
+        }
+
+        public IEnumerable<PlanetChunkNode> LeafChunks()
+        {
+            return Faces.SelectMany(faceNode => faceNode.RootChunk.LeafChunks());
         }
     }
 }

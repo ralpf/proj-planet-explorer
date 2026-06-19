@@ -23,9 +23,14 @@ namespace Planets.Topology
             LocalUp = localUp;
         }
 
-        public void GenerateChunks()
+        public void GenerateRootChunk()
         {
             rootChunk = new PlanetChunkNode(0,this, null, Vector2.zero, Vector2.one);
+        }
+
+        public void TestSubdivide()
+        {
+            RootChunk.Subdivide();
         }
     }
 }

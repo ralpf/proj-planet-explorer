@@ -19,14 +19,34 @@ namespace Planets.MB
         [SerializeField, Range(2, 128)] int resolution = 16;
         [SerializeField] Material material;
 
+        [SerializeField, Space(20)] Camera observerCamera;
+        [SerializeField] int maxSubdivisions = 4;
+        [SerializeField] float subdivisionDistance = 100f;
+        
+        
+        
+        public PlanetRootNode PlanetNode { get; private set; }
 
-        //public PlanetProfile Profile => profile;
-        
-        
 
         void OnValidate()
         {
             Debug.Assert(chunkPool, "Planet chunk pool not set in inspector");
+        }
+
+        void UpdateSubdivisions()
+        {
+            bool dirty = false;
+
+            foreach (PlanetChunkNode chunk in PlanetNode.LeafChunks())
+            {
+                if (chunk.SubdivisionLevel >= maxSubdivisions) continue;
+
+                Vector3 localCenter = chunk.LocalCenterNormal * profile.Radius;
+                Vector3 worldCenter = this.transform.TransformPoint(localCenter);
+                float distance = Vector3.Distance(observerCamera.transform.position, worldCenter);
+                
+                kontinue here ...
+            }
         }
 
         [ContextMenu("GENERATE")]
@@ -34,13 +54,16 @@ namespace Planets.MB
         {
             this.Clear();
             // make logical nodes
-            var rootNode = new PlanetRootNode();
-            rootNode.GenerateFaces();
+            PlanetNode = new PlanetRootNode();
+            PlanetNode.GenerateFaces();
             // make unity objects
-            foreach (PlanetFaceNode faceNode in rootNode.Faces)
+            foreach (PlanetFaceNode faceNode in PlanetNode.Faces)
             {
+                faceNode.GenerateRootChunk();
+                var chunkData = this.CreateChunkData(faceNode.RootChunk);
+
                 PlanetChunk chunkObject = chunkPool.Rent();
-                chunkObject.Recalculate(this.CreateChunkData(faceNode.RootChunk));
+                chunkObject.Recalculate(chunkData);
                 chunkObject.SetMaterial(material);
             }
         }
@@ -50,6 +73,24 @@ namespace Planets.MB
         {
             this.transform.DestroyChildren();
             chunkPool.Clear();
+        }
+
+        public void TestSubdivide()
+        {
+            Clear();
+            foreach (PlanetFaceNode faceNode in PlanetNode.Faces)
+                faceNode.TestSubdivide();
+
+            foreach (PlanetFaceNode faceNode in PlanetNode.Faces)
+            {
+                foreach (PlanetChunkNode chunk in faceNode.RootChunk.LeafChunks())
+                {
+                    var data = this.CreateChunkData(chunk);
+                    var uobj = chunkPool.Rent();
+                    uobj.Recalculate(data);
+                    uobj.SetMaterial(material);
+                }
+            }
         }
 
         private PlanetChunkData CreateChunkData(PlanetChunkNode chunkNode)

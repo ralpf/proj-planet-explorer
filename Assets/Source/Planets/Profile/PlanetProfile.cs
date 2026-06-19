@@ -9,6 +9,6 @@ namespace Planets.Profiles
     {
         [SerializeField] double radius = 6371000.0 / 1000;
 
-        public double Radius => radius;
+        public float Radius => (float)radius;
     }       
 }
