@@ -11,11 +11,12 @@ namespace Planets.Topology
     {
         PlanetChunkNode[] childSubdivisions;
         
-        public PlanetFaceNode  ParentFace { get; private set; }
+        public PlanetFaceNode  ParentFace  { get; private set; }
         public PlanetChunkNode ParentChunk { get; private set; }
+        public IEnumerable<PlanetChunkNode> Children => childSubdivisions; 
 
         public bool IsSubdivided => childSubdivisions != null;
-        public int SubdivisionLevel { get; private set; }
+        public int  SubdivisionLevel { get; private set; }
         public Vector2 UVMin { get; private set; }
         public Vector2 UVMax { get; private set; }
         public Vector3 LocalCenterNormal { get; private set; }  // aka local normal of chunk from it's center
@@ -44,6 +45,11 @@ namespace Planets.Topology
             childSubdivisions[1] = new PlanetChunkNode(childSubLevel, ParentFace, this, new Vector2(uvCenter.x, UVMin.y), new Vector2(UVMax.x, uvCenter.y));
             childSubdivisions[2] = new PlanetChunkNode(childSubLevel, ParentFace, this, new Vector2(UVMin.x, uvCenter.y), new Vector2(uvCenter.x, UVMax.y));
             childSubdivisions[3] = new PlanetChunkNode(childSubLevel, ParentFace, this, new Vector2(uvCenter.x, uvCenter.y), new Vector2(UVMax.x, UVMax.y));
+        }
+
+        public void Collapse()
+        {
+            //throw null;
         }
         
         public IEnumerable<PlanetChunkNode> AllChunks()

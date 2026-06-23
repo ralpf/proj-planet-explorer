@@ -26,7 +26,7 @@ namespace Planets.MB.Ed
                 Target.Clear();
             GUILayout.EndHorizontal();
             
-            if (GUILayout.Button("Sub")) Target.TestSubdivide();
+            //if (GUILayout.Button("Sub")) Target.TestSubdivide();
             serializedObject.ApplyModifiedProperties();
         }
     }

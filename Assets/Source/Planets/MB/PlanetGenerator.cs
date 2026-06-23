@@ -18,10 +18,12 @@ namespace Planets.MB
         [SerializeField] PlanetProfile profile;
         [SerializeField, Range(2, 128)] int resolution = 16;
         [SerializeField] Material material;
+        [SerializeField] Material[] testMats;
 
-        [SerializeField, Space(20)] Camera observerCamera;
+        [SerializeField, Space(20)] Transform observerXf;
         [SerializeField] int maxSubdivisions = 4;
         [SerializeField] float subdivisionDistance = 100f;
+        [SerializeField] float subdivisionHysteresis = 20f;
         
         
         
@@ -33,21 +35,102 @@ namespace Planets.MB
             Debug.Assert(chunkPool, "Planet chunk pool not set in inspector");
         }
 
+        void Update()
+        {
+            UpdateSubdivisions();
+        }
+
         void UpdateSubdivisions()
         {
+            if (PlanetNode == null) Generate();
             bool dirty = false;
 
-            foreach (PlanetChunkNode chunk in PlanetNode.LeafChunks())
+            foreach (PlanetFaceNode faceNode in PlanetNode.Faces)
             {
-                if (chunk.SubdivisionLevel >= maxSubdivisions) continue;
+                dirty |= EvaluateChunk(faceNode.RootChunk);
+            }
 
+            if (dirty) RebuildRenderChunkObjects();
+
+            bool EvaluateChunk(PlanetChunkNode chunk)	// => local method
+            {
+                float distance = DistanceFromChunkToObserver(chunk);
+                if (chunk.IsSubdivided)
+                {
+                    if (ShouldCollapse(chunk, distance))
+                    {
+                        chunk.Collapse();
+                        return true;
+                    }
+
+                    bool dirty = false;
+
+                    foreach (PlanetChunkNode childChunk in chunk.Children)
+                        dirty |= EvaluateChunk(childChunk);      // recursive call
+
+                    return dirty;
+                }
+                // not subdivided chunk
+                if (ShouldSubdivide(chunk, distance))
+                {
+                    chunk.Subdivide();
+                    return true;
+                }
+
+                return false;
+            }
+
+            float DistanceFromChunkToObserver(PlanetChunkNode chunk)
+            {
                 Vector3 localCenter = chunk.LocalCenterNormal * profile.Radius;
-                Vector3 worldCenter = this.transform.TransformPoint(localCenter);
-                float distance = Vector3.Distance(observerCamera.transform.position, worldCenter);
-                
-                kontinue here ...
+                Vector3 worldCenter = transform.TransformPoint(localCenter);
+                return Vector3.Distance(observerXf.position, worldCenter);
+            }
+
+            bool ShouldSubdivide(PlanetChunkNode chunk, float distance)
+            {
+                if (chunk.SubdivisionLevel >= maxSubdivisions) return false;
+                return distance < SplitDistance(chunk.SubdivisionLevel);
+            }
+
+            bool ShouldCollapse(PlanetChunkNode chunk, float distance)
+            {
+                if (chunk.IsSubdivided == false) return false;
+                return distance > CollapseDistance(chunk.SubdivisionLevel);
+            }
+
+            float SplitDistance(int subdivisionLevel)
+            {
+                return (maxSubdivisions - subdivisionLevel) * subdivisionDistance;
+            }
+
+            float CollapseDistance(int subdivisionLevel)
+            {
+                return SplitDistance(subdivisionLevel) + subdivisionHysteresis;
             }
         }
+
+        void RebuildRenderChunkObjects()
+        {
+            foreach (Transform xf in this.transform)
+            {
+                if (xf.TryGetComponent<PlanetChunk>(out var cmp))
+                    chunkPool.Release(cmp);
+            }
+
+            foreach (PlanetFaceNode faceNode in PlanetNode.Faces)
+            {
+                foreach (PlanetChunkNode chunk in faceNode.RootChunk.LeafChunks())
+                {
+                    var data = this.CreateChunkData(chunk);
+                    var uobj = chunkPool.Rent();
+                    uobj.Recalculate(data);
+                    uobj.SetMaterial(testMats[chunk.SubdivisionLevel]);
+                }
+            }
+        }
+        
+
 
         [ContextMenu("GENERATE")]
         public void Generate()
@@ -75,23 +158,23 @@ namespace Planets.MB
             chunkPool.Clear();
         }
 
-        public void TestSubdivide()
-        {
-            Clear();
-            foreach (PlanetFaceNode faceNode in PlanetNode.Faces)
-                faceNode.TestSubdivide();
-
-            foreach (PlanetFaceNode faceNode in PlanetNode.Faces)
-            {
-                foreach (PlanetChunkNode chunk in faceNode.RootChunk.LeafChunks())
-                {
-                    var data = this.CreateChunkData(chunk);
-                    var uobj = chunkPool.Rent();
-                    uobj.Recalculate(data);
-                    uobj.SetMaterial(material);
-                }
-            }
-        }
+        // public void TestSubdivide()
+        // {
+        //     Clear();
+        //     foreach (PlanetFaceNode faceNode in PlanetNode.Faces)
+        //         faceNode.TestSubdivide();
+        //
+        //     foreach (PlanetFaceNode faceNode in PlanetNode.Faces)
+        //     {
+        //         foreach (PlanetChunkNode chunk in faceNode.RootChunk.LeafChunks())
+        //         {
+        //             var data = this.CreateChunkData(chunk);
+        //             var uobj = chunkPool.Rent();
+        //             uobj.Recalculate(data);
+        //             uobj.SetMaterial(material);
+        //         }
+        //     }
+        // }
 
         private PlanetChunkData CreateChunkData(PlanetChunkNode chunkNode)
         {

@@ -12,8 +12,8 @@ namespace Planets.Topology
         PlanetRootNode planetNode;
         PlanetChunkNode rootChunk;  // subdivision level 0 chunk
 
-        public PlanetRootNode PlanetNode => planetNode;
-        public PlanetChunkNode RootChunk => rootChunk;
+        public PlanetRootNode  PlanetNode => planetNode;
+        public PlanetChunkNode RootChunk  => rootChunk;
         public Vector3 LocalUp { get; private set; }
 
 
