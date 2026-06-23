@@ -284,7 +284,7 @@ Transform:
   m_GameObject: {fileID: 791877552}
   serializedVersion: 2
   m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
-  m_LocalPosition: {x: -10970, y: 0, z: 0}
+  m_LocalPosition: {x: 6000, y: 0, z: 0}
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_ConstrainProportionsScale: 0
   m_Children: []
@@ -462,10 +462,11 @@ MonoBehaviour:
   - {fileID: 2100000, guid: 0eb92973620f91046a3c7ea4290b227d, type: 2}
   - {fileID: 2100000, guid: 41356b9f76df312478899ab19f4d88d7, type: 2}
   - {fileID: 2100000, guid: 324dffac73ebb0f41b7e3bebbc8b64bd, type: 2}
+  - {fileID: 2100000, guid: 425ebf2fe8a17e64b976e8797dd2467c, type: 2}
   observerXf: {fileID: 791877553}
   maxSubdivisions: 4
-  subdivisionDistance: 100
-  subdivisionHysteresis: 20
+  subdivisionDistance: 400
+  subdivisionHysteresis: 0
 --- !u!114 &1371579618
 MonoBehaviour:
   m_ObjectHideFlags: 0

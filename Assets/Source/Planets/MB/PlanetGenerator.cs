@@ -4,7 +4,7 @@ using System.Collections.Generic;
 using Planets.DataBuffers;
 using UnityEngine;
 using Planets.Profiles;
-using Planets.Topology;
+using Planets.LogicalTree;
 using Extensions.UnityAPI;
 
 
@@ -24,10 +24,11 @@ namespace Planets.MB
         [SerializeField] int maxSubdivisions = 4;
         [SerializeField] float subdivisionDistance = 100f;
         [SerializeField] float subdivisionHysteresis = 20f;
+
+        Dictionary<ChunkNode, PlanetChunk> dict = new();
         
         
-        
-        public PlanetRootNode PlanetNode { get; private set; }
+        public PlanetNode PlanetNode { get; private set; }
 
 
         void OnValidate()
@@ -43,60 +44,51 @@ namespace Planets.MB
         void UpdateSubdivisions()
         {
             if (PlanetNode == null) Generate();
-            bool dirty = false;
 
-            foreach (PlanetFaceNode faceNode in PlanetNode.Faces)
+            foreach (FaceNode faceNode in PlanetNode.Faces)
+                EvaluateChunkSubdivision(faceNode.RootChunk);
+
+            void EvaluateChunkSubdivision(ChunkNode chunk)	// => local method
             {
-                dirty |= EvaluateChunk(faceNode.RootChunk);
-            }
+                if (chunk.IsLeafChunk && chunk.SubdivisionLevel < maxSubdivisions)
+                {
+                    if (DistanceFromChunkToObserver(chunk) < SplitDistance(chunk.SubdivisionLevel))
+                    {
+                        chunk.Subdivide();
+                        dict.Remove(chunk, out PlanetChunk planetChunk);
+                        chunkPool.Release(planetChunk);
+                        foreach (var child in chunk.Children)
+                            AddChunkObject(child);
+                    }
+                    return;
+                }
+                if (chunk.IsLeafParent)
+                {
+                    if ((DistanceFromChunkToObserver(chunk) > CollapseDistance(chunk.SubdivisionLevel)))
+                    {
+                        foreach (var child in chunk.Children)
+                            RemoveChunkObject(child);
 
-            if (dirty) RebuildRenderChunkObjects();
+                        chunk.Collapse();
+                        AddChunkObject(chunk);
 
-            bool EvaluateChunk(PlanetChunkNode chunk)	// => local method
-            {
-                float distance = DistanceFromChunkToObserver(chunk);
+                        return;
+                    }
+                }
+
+                // pass thru node or leaf parent that did not collapse
                 if (chunk.IsSubdivided)
                 {
-                    if (ShouldCollapse(chunk, distance))
-                    {
-                        chunk.Collapse();
-                        return true;
-                    }
-
-                    bool dirty = false;
-
-                    foreach (PlanetChunkNode childChunk in chunk.Children)
-                        dirty |= EvaluateChunk(childChunk);      // recursive call
-
-                    return dirty;
+                    foreach (ChunkNode child in chunk.Children)
+                        EvaluateChunkSubdivision(child);
                 }
-                // not subdivided chunk
-                if (ShouldSubdivide(chunk, distance))
-                {
-                    chunk.Subdivide();
-                    return true;
-                }
-
-                return false;
             }
 
-            float DistanceFromChunkToObserver(PlanetChunkNode chunk)
+            float DistanceFromChunkToObserver(ChunkNode chunk)
             {
                 Vector3 localCenter = chunk.LocalCenterNormal * profile.Radius;
                 Vector3 worldCenter = transform.TransformPoint(localCenter);
                 return Vector3.Distance(observerXf.position, worldCenter);
-            }
-
-            bool ShouldSubdivide(PlanetChunkNode chunk, float distance)
-            {
-                if (chunk.SubdivisionLevel >= maxSubdivisions) return false;
-                return distance < SplitDistance(chunk.SubdivisionLevel);
-            }
-
-            bool ShouldCollapse(PlanetChunkNode chunk, float distance)
-            {
-                if (chunk.IsSubdivided == false) return false;
-                return distance > CollapseDistance(chunk.SubdivisionLevel);
             }
 
             float SplitDistance(int subdivisionLevel)
@@ -108,28 +100,8 @@ namespace Planets.MB
             {
                 return SplitDistance(subdivisionLevel) + subdivisionHysteresis;
             }
-        }
 
-        void RebuildRenderChunkObjects()
-        {
-            foreach (Transform xf in this.transform)
-            {
-                if (xf.TryGetComponent<PlanetChunk>(out var cmp))
-                    chunkPool.Release(cmp);
-            }
-
-            foreach (PlanetFaceNode faceNode in PlanetNode.Faces)
-            {
-                foreach (PlanetChunkNode chunk in faceNode.RootChunk.LeafChunks())
-                {
-                    var data = this.CreateChunkData(chunk);
-                    var uobj = chunkPool.Rent();
-                    uobj.Recalculate(data);
-                    uobj.SetMaterial(testMats[chunk.SubdivisionLevel]);
-                }
-            }
         }
-        
 
 
         [ContextMenu("GENERATE")]
@@ -137,18 +109,10 @@ namespace Planets.MB
         {
             this.Clear();
             // make logical nodes
-            PlanetNode = new PlanetRootNode();
-            PlanetNode.GenerateFaces();
+            PlanetNode = new PlanetNode();
             // make unity objects
-            foreach (PlanetFaceNode faceNode in PlanetNode.Faces)
-            {
-                faceNode.GenerateRootChunk();
-                var chunkData = this.CreateChunkData(faceNode.RootChunk);
-
-                PlanetChunk chunkObject = chunkPool.Rent();
-                chunkObject.Recalculate(chunkData);
-                chunkObject.SetMaterial(material);
-            }
+            foreach (FaceNode faceNode in PlanetNode.Faces)
+                AddChunkObject(faceNode.RootChunk);
         }
 
         [ContextMenu("CLEAR")]
@@ -156,6 +120,23 @@ namespace Planets.MB
         {
             this.transform.DestroyChildren();
             chunkPool.Clear();
+            dict.Clear();
+            PlanetNode = null;
+        }
+        
+        void AddChunkObject(ChunkNode chunk)
+        {
+            var childObject = chunkPool.Rent();
+            childObject.Recalculate(CreateChunkData(chunk));
+            childObject.SetMaterial(testMats[chunk.SubdivisionLevel]);
+            childObject.gameObject.SetActive(true);
+            dict.Add(chunk, childObject);
+        }
+
+        void RemoveChunkObject(ChunkNode chunk)
+        {
+            dict.Remove(chunk, out var planetChunk);
+            chunkPool.Release(planetChunk);
         }
 
         // public void TestSubdivide()
@@ -176,7 +157,7 @@ namespace Planets.MB
         //     }
         // }
 
-        private PlanetChunkData CreateChunkData(PlanetChunkNode chunkNode)
+        private PlanetChunkData CreateChunkData(ChunkNode chunkNode)
         {
             int vertexCount = resolution * resolution;
 
