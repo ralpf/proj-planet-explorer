@@ -453,7 +453,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 6b2463b555c64274dada68584b1ef38d, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  chunkPool: {fileID: 1371579618}
+  chunkController: {fileID: 1371579618}
   profile: {fileID: 11400000, guid: cfb34359cc77bd643aff2c88e173479d, type: 2}
   resolution: 16
   material: {fileID: 2100000, guid: 43608e517979bbf43a322bef1bc7b7de, type: 2}

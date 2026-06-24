@@ -11,6 +11,10 @@ namespace Planets.MB
     [RequireComponent(typeof(MeshRenderer))]
     public class PlanetChunk : MonoBehaviour
     {
+        public bool Active {
+            set => this.gameObject.SetActive(value);
+        }
+        
         public void Recalculate(PlanetChunkData chunkData)
         {
             var mf = this.GetComponent<MeshFilter>();
@@ -28,5 +32,6 @@ namespace Planets.MB
             var mr = this.GetComponent<MeshRenderer>();
             mr.sharedMaterial = mat;
         }
+
     }
 }
