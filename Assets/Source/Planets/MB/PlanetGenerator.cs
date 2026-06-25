@@ -52,33 +52,38 @@ namespace Planets.MB
 
             void EvaluateChunkSubdivision(ChunkNode chunk)	// => local method
             {
-                if (chunk.IsLeafChunk && chunk.SubdivisionLevel < maxSubdivisions)
+                if (ShouldSplit(chunk))
                 {
-                    if (DistanceFromChunkToObserver(chunk) < SplitDistance(chunk.SubdivisionLevel))
-                    {
-                        chunk.Subdivide();
-                        chunkController.Release(chunk);
-                        chunkController.AddMany(chunk.Children);
-                    }
-                    return;
+                    chunk.Subdivide();
+                    chunkController.Release(chunk);
+                    chunkController.AddMany(chunk.Children);
                 }
-                if (chunk.IsLeafParent)
+                else if (ShouldCollapse(chunk))
                 {
-                    if ((DistanceFromChunkToObserver(chunk) > CollapseDistance(chunk.SubdivisionLevel)))
-                    {
-                        chunkController.ReleaseMany(chunk.Children);
-                        chunk.Collapse();
-                        chunkController.Add(chunk);
-                        return;
-                    }
+                    chunkController.ReleaseMany(chunk.Children);
+                    chunk.Collapse();
+                    chunkController.Add(chunk);
                 }
-
-                // pass thru node or leaf parent that did not collapse
-                if (chunk.IsSubdivided)
+                else if (chunk.IsSubdivided)
                 {
+                    // pass thru node or leaf parent that did not collapse
                     foreach (ChunkNode child in chunk.Children)
                         EvaluateChunkSubdivision(child);
                 }
+            }
+
+            bool ShouldSplit(ChunkNode chunk)
+            {
+                if (chunk.IsLeafChunk == false || chunk.SubdivisionLevel >= maxSubdivisions) return false;
+                float splitDistance = (maxSubdivisions - chunk.SubdivisionLevel) * subdivisionDistance;
+                return DistanceFromChunkToObserver(chunk) < splitDistance;
+            }
+
+            bool ShouldCollapse(ChunkNode chunk)
+            {
+                if (chunk.IsLeafParent == false) return false;
+                float collapseDistance = (maxSubdivisions - chunk.SubdivisionLevel) * subdivisionDistance + subdivisionHysteresis;
+                return DistanceFromChunkToObserver(chunk) > collapseDistance;
             }
 
             float DistanceFromChunkToObserver(ChunkNode chunk)
@@ -86,16 +91,6 @@ namespace Planets.MB
                 Vector3 localCenter = chunk.LocalCenterNormal * profile.Radius;
                 Vector3 worldCenter = transform.TransformPoint(localCenter);
                 return Vector3.Distance(observerXf.position, worldCenter);
-            }
-
-            float SplitDistance(int subdivisionLevel)
-            {
-                return (maxSubdivisions - subdivisionLevel) * subdivisionDistance;
-            }
-
-            float CollapseDistance(int subdivisionLevel)
-            {
-                return SplitDistance(subdivisionLevel) + subdivisionHysteresis;
             }
 
         }
@@ -108,7 +103,6 @@ namespace Planets.MB
             // make logical nodes
             PlanetNode = new PlanetNode();
             
-            chunkController.Init();
             // make unity objects
             foreach (FaceNode faceNode in PlanetNode.Faces)
                 chunkController.Add(faceNode.RootChunk);

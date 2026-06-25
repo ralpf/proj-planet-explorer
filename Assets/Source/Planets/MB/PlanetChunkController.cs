@@ -14,28 +14,24 @@ namespace Planets.MB
     [RequireComponent(typeof(PlanetGenerator))]
     public class PlanetChunkController : MonoBehaviour
     {
+        [SerializeField] PlanetGenerator generator;
+
         Stack<PlanetChunk> pool = new();
         Dictionary<ChunkNode, PlanetChunk> active = new();
-        int createdCount;
-        float planetRadius;
-        int resolution;
-        Material[] mats;
 
-        public void Init()
+
+        void OnValidate()
         {
-            var gen = this.GetComponent<PlanetGenerator>();
-            planetRadius = gen.Radius;
-            resolution = gen.Resolution;
-            mats = gen.LevelMaterials;
+            if (generator == null) Debug.LogError("Generator not set in inspector", this);
         }
-
 
         public void Add(ChunkNode chunk)
         {
             PlanetChunk uobj = pool.Count > 0 ? pool.Pop() : CreateNew();
-            uobj.Recalculate(new PlanetChunkData(chunk, resolution, planetRadius));
-            uobj.SetMaterial(mats[chunk.SubdivisionLevel]);
+            uobj.Recalculate(new PlanetChunkData(chunk, generator.Resolution, generator.Radius));
+            uobj.SetMaterial(generator.LevelMaterials[chunk.SubdivisionLevel]);
             uobj.Active = true;
+            uobj.name = $"Planet Chunk L{chunk.SubdivisionLevel}";
             active.Add(chunk, uobj);
         }
 
@@ -64,14 +60,13 @@ namespace Planets.MB
         {
             pool.Clear();
             active.Clear();
-            createdCount = 0;
             transform.DestroyChildren();
         }
 
         private PlanetChunk CreateNew()
         {
-            var go = new GameObject($"[{++createdCount}] Planet Chunk L");
-            go.transform.SetParent(this.transform, false);
+            var go = new GameObject();
+            go.transform.SetParentAndReset(transform);
             return go.AddComponent<PlanetChunk>();
         }
     }

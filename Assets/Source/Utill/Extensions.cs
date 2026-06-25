@@ -13,6 +13,13 @@ namespace Extensions.UnityAPI
             xf.localRotation = Quaternion.identity;
         }
 
+        public static void SetParentAndReset(this Transform xf, Transform parent)
+        {
+            if (!xf) return;
+            xf.SetParent(parent, false);
+            xf.Reset();
+        }
+
         public static void DestroyChildren(this Transform xf)
         {
             if (!xf) return;
