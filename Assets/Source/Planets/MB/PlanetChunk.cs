@@ -21,9 +21,10 @@ namespace Planets.MB
             if (mf.sharedMesh == null) mf.sharedMesh = new Mesh() { name = "Chunk Mesh" };
             var mesh = mf.sharedMesh;
             mesh.vertices = chunkData.Vertices;
-            mesh.normals = chunkData.Normals;
+            //mesh.normals = chunkData.Normals;
             mesh.triangles = chunkData.Triangles;
             mesh.uv = chunkData.UVs;
+            mesh.RecalculateNormals();
             mesh.RecalculateBounds();
         }
 

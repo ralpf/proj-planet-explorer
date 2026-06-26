@@ -11,7 +11,7 @@ namespace Planets.DataBuffers
     public class PlanetChunkData
     {
         public Vector3[] Vertices { get; private set; }
-        public Vector3[] Normals { get; private set; }
+        //public Vector3[] Normals { get; private set; }
         public Vector2[] UVs { get; private set; }
         public int[] Triangles { get; private set; }
 
@@ -22,7 +22,7 @@ namespace Planets.DataBuffers
             int vertexCount = profile.Resolution * profile.Resolution;
 
             Vector3[] vertices = new Vector3[vertexCount];
-            Vector3[] normals = new Vector3[vertexCount];
+            //Vector3[] normals = new Vector3[vertexCount];
             Vector2[] uvs = new Vector2[vertexCount];
             int[] triangles = GenerateTriangles(profile.Resolution);
 
@@ -55,13 +55,13 @@ namespace Planets.DataBuffers
                     float elevation = profile.GetElevation(pointOnSphere);
 
                     vertices[vertexIndex] = pointOnSphere * (profile.Radius + elevation);
-                    normals[vertexIndex]  = pointOnSphere;
+                    //normals[vertexIndex]  = pointOnSphere;
                     uvs[vertexIndex] = faceUv;
                 }
             }
 
             Vertices = vertices;
-            Normals = normals;
+            //Normals = normals;
             UVs = uvs;
             Triangles = triangles;
         }
