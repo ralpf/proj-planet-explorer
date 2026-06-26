@@ -23,8 +23,8 @@ namespace Extensions.UnityAPI
         public static void DestroyChildren(this Transform xf)
         {
             if (!xf) return;
-            while (xf.childCount > 0)
-                xf.GetChild(0).gameObject.DestroySafe();
+            for (int i = xf.childCount - 1; i >= 0; --i)
+                xf.GetChild(i).gameObject.DestroySafe();
         }
 
         public static void DestroySafe(this GameObject go)

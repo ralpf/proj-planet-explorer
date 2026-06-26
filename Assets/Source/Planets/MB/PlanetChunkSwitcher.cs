@@ -41,7 +41,7 @@ namespace Planets.MB
 
         void UpdateSubdivisions()
         {
-            if (planetNode == null) Generate();
+            if (planetNode == null) return;
 
             foreach (FaceNode faceNode in planetNode.Faces)
                 EvaluateChunkSubdivision(faceNode.RootChunk);

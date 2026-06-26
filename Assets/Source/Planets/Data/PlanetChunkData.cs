@@ -2,6 +2,7 @@
 using System.Collections;
 using System.Collections.Generic;
 using Planets.LogicalTree;
+using Planets.Profiles;
 using UnityEngine;
 
 
@@ -16,14 +17,14 @@ namespace Planets.DataBuffers
 
 
 
-        public PlanetChunkData(ChunkNode chunkNode, int resolution, float planetRadius)
+        public PlanetChunkData(ChunkNode chunkNode, PlanetProfile profile)
         {
-            int vertexCount = resolution * resolution;
+            int vertexCount = profile.Resolution * profile.Resolution;
 
             Vector3[] vertices = new Vector3[vertexCount];
             Vector3[] normals = new Vector3[vertexCount];
             Vector2[] uvs = new Vector2[vertexCount];
-            int[] triangles = GenerateTriangles(resolution);
+            int[] triangles = GenerateTriangles(profile.Resolution);
 
             Vector3 localUp = chunkNode.ParentFace.LocalUp;
             Vector2 uvMin = chunkNode.UVMin;
@@ -32,13 +33,13 @@ namespace Planets.DataBuffers
             Vector3 axisA = new Vector3(localUp.y, localUp.z, localUp.x);
             Vector3 axisB = Vector3.Cross(localUp, axisA);
 
-            for (int y = 0; y < resolution; y++)
+            for (int y = 0; y < profile.Resolution; y++)
             {
-                for (int x = 0; x < resolution; x++)
+                for (int x = 0; x < profile.Resolution; x++)
                 {
-                    int vertexIndex = x + y * resolution;
+                    int vertexIndex = x + y * profile.Resolution;
 
-                    Vector2 percent = new Vector2(x, y) / (resolution - 1);
+                    Vector2 percent = new Vector2(x, y) / (profile.Resolution - 1);
 
                     Vector2 faceUv = new Vector2(
                         Mathf.Lerp(uvMin.x, uvMax.x, percent.x),
@@ -51,8 +52,9 @@ namespace Planets.DataBuffers
                         + (faceUv.y - 0.5f) * 2.0f * axisB;
 
                     Vector3 pointOnSphere = pointOnCube.normalized;
+                    float elevation = profile.GetElevation(pointOnSphere);
 
-                    vertices[vertexIndex] = pointOnSphere * planetRadius;
+                    vertices[vertexIndex] = pointOnSphere * (profile.Radius + elevation);
                     normals[vertexIndex]  = pointOnSphere;
                     uvs[vertexIndex] = faceUv;
                 }

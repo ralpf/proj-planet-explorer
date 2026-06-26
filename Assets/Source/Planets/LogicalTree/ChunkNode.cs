@@ -95,8 +95,8 @@ namespace Planets.LogicalTree
         {
             if (!IsSubdivided) return false;
             foreach (var x in childSubdivisions)
-                if (x.IsLeafChunk) return true;
-            return false;
+                if (x.IsLeafChunk == false) return false;
+            return true;
         }
     }
 }
