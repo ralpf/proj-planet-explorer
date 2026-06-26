@@ -7,10 +7,10 @@ using UnityEngine;
 
 namespace Planets.MB.Ed
 {
-    [CustomEditor(typeof(PlanetGenerator))]
+    [CustomEditor(typeof(PlanetChunkSwitcher))]
     public class PlanetGeneratorEditor : Editor
     {
-        PlanetGenerator Target => (PlanetGenerator)this.target;
+        PlanetChunkSwitcher Target => (PlanetChunkSwitcher)this.target;
 
 
         public override void OnInspectorGUI()
@@ -20,10 +20,17 @@ namespace Planets.MB.Ed
             GUILayout.Space(30);
 
             GUILayout.BeginHorizontal();
-            if (GUILayout.Button(" Generate "))
-                Target.Generate();
-            if (GUILayout.Button(" Clear ", GUILayout.ExpandWidth(false)))
-                Target.Clear();
+            if (Application.isPlaying)
+            {
+                if (GUILayout.Button(" Generate "))
+                    Target.Generate();
+                if (GUILayout.Button(" Clear ", GUILayout.ExpandWidth(false)))
+                    Target.Clear();
+            }
+            else
+            {
+                EditorGUILayout.HelpBox("Generation available in play mode only", MessageType.Info);
+            }
             GUILayout.EndHorizontal();
             
             //if (GUILayout.Button("Sub")) Target.TestSubdivide();

@@ -33,5 +33,13 @@ namespace Extensions.UnityAPI
             if (Application.isPlaying) Object.Destroy(go);
             else Object.DestroyImmediate(go);
         }
+
+        public static T GetComponentAsserted<T>(this MonoBehaviour mb) where T : Component
+        {
+            Debug.Assert(mb, "target object's component was null");
+            T cmp = mb.GetComponent<T>();
+            Debug.Assert(cmp, $"target has no component of type '{typeof(T).Name}' assigned");
+            return cmp;
+        }
     }
 }

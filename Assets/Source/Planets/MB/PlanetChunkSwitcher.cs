@@ -1,41 +1,37 @@
 using System;
 using System.Collections;
 using System.Collections.Generic;
+using Extensions.UnityAPI;
 using Planets.DataBuffers;
 using UnityEngine;
 using Planets.Profiles;
 using Planets.LogicalTree;
-using Extensions.UnityAPI;
 
 
 
 namespace Planets.MB
 {
-    [RequireComponent(typeof(PlanetChunkController))]
-    public class PlanetGenerator : MonoBehaviour
+    [RequireComponent(typeof(PlanetChunkPool))]
+    public class PlanetChunkSwitcher : MonoBehaviour
     {
-        [SerializeField] PlanetChunkController chunkController;
         [SerializeField] PlanetProfile profile;
-        [SerializeField, Range(2, 128)] int resolution = 16;
-        [SerializeField] Material material;
-        [SerializeField] Material[] testMats;
 
         [SerializeField, Space(20)] Transform observerXf;
         [SerializeField] int maxSubdivisions = 4;
         [SerializeField] float subdivisionDistance = 100f;
         [SerializeField] float subdivisionHysteresis = 20f;
 
-        
-        
-        public PlanetNode PlanetNode { get; private set; }
-        public float Radius => profile.Radius;
-        public int Resolution => resolution;
-        public Material[] LevelMaterials => testMats;
+        PlanetNode      planetNode;
+        PlanetChunkPool chunkPool;
 
 
-        void OnValidate()
+        public PlanetProfile Profile => profile;
+
+
+
+        void Awake()
         {
-            Debug.Assert(chunkController, "Planet chunk pool not set in inspector");
+            chunkPool = this.GetComponentAsserted<PlanetChunkPool>();
         }
 
         void Update()
@@ -45,9 +41,9 @@ namespace Planets.MB
 
         void UpdateSubdivisions()
         {
-            if (PlanetNode == null) Generate();
+            if (planetNode == null) Generate();
 
-            foreach (FaceNode faceNode in PlanetNode.Faces)
+            foreach (FaceNode faceNode in planetNode.Faces)
                 EvaluateChunkSubdivision(faceNode.RootChunk);
 
             void EvaluateChunkSubdivision(ChunkNode chunk)	// => local method
@@ -55,14 +51,14 @@ namespace Planets.MB
                 if (ShouldSplit(chunk))
                 {
                     chunk.Subdivide();
-                    chunkController.Release(chunk);
-                    chunkController.AddMany(chunk.Children);
+                    chunkPool.Release(chunk);
+                    chunkPool.AddMany(chunk.Children);
                 }
                 else if (ShouldCollapse(chunk))
                 {
-                    chunkController.ReleaseMany(chunk.Children);
+                    chunkPool.ReleaseMany(chunk.Children);
                     chunk.Collapse();
-                    chunkController.Add(chunk);
+                    chunkPool.Add(chunk);
                 }
                 else if (chunk.IsSubdivided)
                 {
@@ -101,18 +97,18 @@ namespace Planets.MB
         {
             this.Clear();
             // make logical nodes
-            PlanetNode = new PlanetNode();
+            planetNode = new PlanetNode();
             
             // make unity objects
-            foreach (FaceNode faceNode in PlanetNode.Faces)
-                chunkController.Add(faceNode.RootChunk);
+            foreach (FaceNode faceNode in planetNode.Faces)
+                chunkPool.Add(faceNode.RootChunk);
         }
 
         [ContextMenu("CLEAR")]
         public void Clear()
         {
-            chunkController.Clear();
-            PlanetNode = null;
+            chunkPool.Clear();
+            planetNode = null;
         }
         
     }

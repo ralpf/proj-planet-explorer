@@ -453,16 +453,8 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 6b2463b555c64274dada68584b1ef38d, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  chunkController: {fileID: 1371579618}
+  chunkPool: {fileID: 1371579618}
   profile: {fileID: 11400000, guid: cfb34359cc77bd643aff2c88e173479d, type: 2}
-  resolution: 16
-  material: {fileID: 2100000, guid: 43608e517979bbf43a322bef1bc7b7de, type: 2}
-  testMats:
-  - {fileID: 2100000, guid: 091c0a540ef14524f97fb1e4ee71d7f8, type: 2}
-  - {fileID: 2100000, guid: 0eb92973620f91046a3c7ea4290b227d, type: 2}
-  - {fileID: 2100000, guid: 41356b9f76df312478899ab19f4d88d7, type: 2}
-  - {fileID: 2100000, guid: 324dffac73ebb0f41b7e3bebbc8b64bd, type: 2}
-  - {fileID: 2100000, guid: 425ebf2fe8a17e64b976e8797dd2467c, type: 2}
   observerXf: {fileID: 791877553}
   maxSubdivisions: 4
   subdivisionDistance: 400

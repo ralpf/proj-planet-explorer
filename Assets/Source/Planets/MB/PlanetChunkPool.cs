@@ -5,31 +5,31 @@ using System.Linq;
 using Extensions.UnityAPI;
 using Planets.DataBuffers;
 using Planets.LogicalTree;
+using Planets.Profiles;
 using UnityEngine;
 
 
 
 namespace Planets.MB
 {
-    [RequireComponent(typeof(PlanetGenerator))]
-    public class PlanetChunkController : MonoBehaviour
+    [RequireComponent(typeof(PlanetChunkSwitcher))]
+    public class PlanetChunkPool : MonoBehaviour
     {
-        [SerializeField] PlanetGenerator generator;
-
+        PlanetProfile profile;
         Stack<PlanetChunk> pool = new();
         Dictionary<ChunkNode, PlanetChunk> active = new();
 
 
-        void OnValidate()
+        void Awake()
         {
-            if (generator == null) Debug.LogError("Generator not set in inspector", this);
+            profile = this.GetComponentAsserted<PlanetChunkSwitcher>().Profile;
         }
 
         public void Add(ChunkNode chunk)
         {
             PlanetChunk uobj = pool.Count > 0 ? pool.Pop() : CreateNew();
-            uobj.Recalculate(new PlanetChunkData(chunk, generator.Resolution, generator.Radius));
-            uobj.SetMaterial(generator.LevelMaterials[chunk.SubdivisionLevel]);
+            uobj.Recalculate(new PlanetChunkData(chunk, profile.Resolution, profile.Radius));
+            uobj.SetMaterial(profile.LevelMaterials[chunk.SubdivisionLevel]);
             uobj.Active = true;
             uobj.name = $"Planet Chunk L{chunk.SubdivisionLevel}";
             active.Add(chunk, uobj);
