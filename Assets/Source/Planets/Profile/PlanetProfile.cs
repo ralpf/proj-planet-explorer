@@ -9,7 +9,7 @@ namespace Planets.Profiles
     {
         [SerializeField] double radius = 6371000.0 / 1000;
         [SerializeField, Range(2, 128)] int resolution = 16;
-        [SerializeField] Material[] testMats;
+        [SerializeField] Material material;
 
         [Space]
         [SerializeField] float heighMult = 1f;
@@ -19,23 +19,19 @@ namespace Planets.Profiles
 
         public int Resolution => resolution;
         public float Radius => (float)radius;
-        public Material[] LevelMaterials => testMats;
+        public Material Material => material;
 
         //......................................................................................PROPERTY
 
         public float GetElevation(Vector3 pointOnSphere)
         {
-            float x = pointOnSphere.x * noiseScale;
-            float y = pointOnSphere.y * noiseScale;
-            float z = pointOnSphere.z * noiseScale;
+            float elevation = 0f;
 
-            float xy = Mathf.PerlinNoise(x, y);
-            float yz = Mathf.PerlinNoise(y, z);
-            float zx = Mathf.PerlinNoise(z, x);
+            elevation += Mathf.Sin(Vector3.Dot(pointOnSphere, new Vector3(1.0f, 0.4f, 0.2f)) * noiseScale);
+            elevation += Mathf.Sin(Vector3.Dot(pointOnSphere, new Vector3(0.3f, 1.0f, 0.7f)) * noiseScale * 1.7f) * 0.5f;
+            elevation += Mathf.Sin(Vector3.Dot(pointOnSphere, new Vector3(0.6f, 0.2f, 1.0f)) * noiseScale * 2.3f) * 0.25f;
 
-            float noise = (xy + yz + zx) / 3.0f;
-
-            return noise * heighMult;
+            return elevation * heighMult;
         }
     }
 }
