@@ -14,6 +14,8 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   radius: 637
   resolution: 16
-  material: {fileID: 2100000, guid: 6d60f55d533b41442a8fd24a5f9b6bad, type: 2}
+  material: {fileID: 2100000, guid: 766e9c33059097f4b990f16477c86d15, type: 2}
   heighMult: 20
   noiseScale: 10
+  layers:
+  - {fileID: 11400000, guid: fbda86c7f9cf664459d691de0a2a2b15, type: 2}

@@ -15,6 +15,8 @@ namespace Planets.Profiles
         [SerializeField] float heighMult = 1f;
         [SerializeField] float noiseScale = 2f;
 
+        [SerializeField] ProfileLayer[] layers;
+
         //......................................................................................PROPERTY
 
         public int Resolution => resolution;
@@ -32,6 +34,21 @@ namespace Planets.Profiles
             elevation += Mathf.Sin(Vector3.Dot(pointOnSphere, new Vector3(0.6f, 0.2f, 1.0f)) * noiseScale * 2.3f) * 0.25f;
 
             return elevation * heighMult;
+        }
+
+        public void Precompute()
+        {
+            for (int i = 0; i < layers.Length; ++i)
+                if (layers[i].active)
+                    layers[i].Precompute();
+        }
+
+        public Cubemap GetDebugCubemap()
+        {
+            foreach (var x in layers)
+                if (x is TectonicPlateLayer tectonic)
+                    return tectonic.DebugCubemap;
+            throw new System.InvalidProgramException();
         }
     }
 }

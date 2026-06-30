@@ -102,6 +102,9 @@ namespace Planets.MB
             // make unity objects
             foreach (FaceNode faceNode in planetNode.Faces)
                 chunkPool.Add(faceNode.RootChunk);
+
+            profile.Precompute();
+            profile.Material.SetTexture("_Cubemap", profile.GetDebugCubemap());
         }
 
         [ContextMenu("CLEAR")]

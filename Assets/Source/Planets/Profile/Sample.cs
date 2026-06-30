@@ -18,6 +18,7 @@ namespace Planets.Profiles
             this.pointOnSphere = pointOnSphere;
             this.radius = radius;
             this.normal = pointOnSphere.normalized;
+            this.tectonicPlate = default;
         }
 
 
