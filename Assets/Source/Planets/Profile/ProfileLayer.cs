@@ -10,6 +10,6 @@ namespace Planets.Profiles
         public bool active = true;
 
         public abstract void Evaluate(ref Sample sample);
-        public abstract void Precompute();
+        public abstract void Initialize();
     }
 }

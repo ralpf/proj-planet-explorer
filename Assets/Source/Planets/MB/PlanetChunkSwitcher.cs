@@ -24,6 +24,8 @@ namespace Planets.MB
         PlanetNode      planetNode;
         PlanetChunkPool chunkPool;
 
+        public DebugInfo debugInfo = DebugInfo.Default;
+
 
         public PlanetProfile Profile => profile;
 
@@ -103,8 +105,12 @@ namespace Planets.MB
             foreach (FaceNode faceNode in planetNode.Faces)
                 chunkPool.Add(faceNode.RootChunk);
 
-            profile.Precompute();
-            profile.Material.SetTexture("_Cubemap", profile.GetDebugCubemap());
+            profile.Initialize();
+        }
+
+        public object QueryTectonicLayer(Vector3 pointOnSphere)
+        {
+            return Profile.Get<TectonicPlateLayer>().LayerData.Querry(pointOnSphere);
         }
 
         [ContextMenu("CLEAR")]
@@ -112,6 +118,17 @@ namespace Planets.MB
         {
             chunkPool.Clear();
             planetNode = null;
+        }
+
+
+        [System.Serializable]
+        public struct DebugInfo
+        {
+            public int tectonicPointCount;
+            public float tectonicPointOffset;
+            public float tectonicPointSize;
+
+            public static DebugInfo Default => new DebugInfo { tectonicPointCount = 128, tectonicPointOffset = 20, tectonicPointSize = 5 };
         }
         
     }

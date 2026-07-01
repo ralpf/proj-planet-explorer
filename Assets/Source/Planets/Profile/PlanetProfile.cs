@@ -36,19 +36,19 @@ namespace Planets.Profiles
             return elevation * heighMult;
         }
 
-        public void Precompute()
+        public void Initialize()
         {
             for (int i = 0; i < layers.Length; ++i)
                 if (layers[i].active)
-                    layers[i].Precompute();
+                    layers[i].Initialize();
         }
 
-        public Cubemap GetDebugCubemap()
+        public T Get<T>() where T : ProfileLayer
         {
             foreach (var x in layers)
-                if (x is TectonicPlateLayer tectonic)
-                    return tectonic.DebugCubemap;
-            throw new System.InvalidProgramException();
+                if (x is T result) return result;
+            return null;
         }
+
     }
 }

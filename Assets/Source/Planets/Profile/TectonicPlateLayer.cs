@@ -9,13 +9,12 @@ namespace Planets.Profiles
     public class TectonicPlateLayer : ProfileLayer
     {
         [SerializeField] int seed = 123;
-        [SerializeField] int plateCount = 9;
-        [SerializeField] int ownershipMapResolution = 64;
-        [SerializeField] Cubemap debugCubemap;
+        [SerializeField, Range(2, 32)] int plateCount = 9;
+        [SerializeField] Vector2 plateSpeedMinMax = new Vector2(0.2f, 1f);
 
-        ComputedData computedData;
+        Data data;  // pre-computed data
 
-        public Cubemap DebugCubemap => debugCubemap;
+        public Data LayerData => data;
 
 
         public override void Evaluate(ref Sample sample)
@@ -23,134 +22,130 @@ namespace Planets.Profiles
             throw new System.NotImplementedException();
         }
 
-        [ContextMenu("Run Precompute")]
-        public override void Precompute()
+        public override void Initialize()
         {
-            computedData = new ComputedData(seed, plateCount, ownershipMapResolution);
-            debugCubemap = computedData.CreateDebugCubemap();
+            data = new Data(this);
         }
 
 
-        public class ComputedData
+        public class Data
         {
             Plate[] plates;
-            OwnershipMap map;
+
+            TectonicPlateLayer L { get; }
 
 
-            public ComputedData(int seed, int plateCount, int mapResolution)
+            public Data(TectonicPlateLayer layer)
             {
+                L = layer;
                 var randState = Random.state;
-                Random.InitState(seed);
+                Random.InitState(L.seed);
                 
-                plates = new Plate[plateCount];
-                for (int i = 0; i < plateCount; ++i)
+                plates = new Plate[L.plateCount];
+                for (int i = 0; i < L.plateCount; ++i)
                 {
-                    plates[i] = new Plate();
-                    plates[i].id = i;
-                    plates[i].center = Random.onUnitSphere;
+                    Plate plate = new();
+                    plate.id = i;
+                    plate.center = Random.onUnitSphere;
+                    plate.motionDirection = GetRandomTangentDirection(plate.center);
+                    plate.speed = Random.Range(L.plateSpeedMinMax.x, L.plateSpeedMinMax.y);
+                    plate.rotationAxis = Vector3.Cross(plate.center, plate.motionDirection).normalized;
+                    plates[i] = plate;
                 }
 
                 Random.state = randState;
-                map = new OwnershipMap(mapResolution, plates);
             }
 
-            public Cubemap CreateDebugCubemap() => map.CreateDebugCubemap(plates.Length);
+            public QResult Querry(Vector3 pointOnSphere)
+            {
+                pointOnSphere.Normalize();
+
+                int closestId = -1;
+                int secondId = -1;
+
+                float closestDot = -2f;
+                float secondDot = -2f;
+
+                for (int i = 0; i < plates.Length; ++i)
+                {
+                    float dot = Vector3.Dot(pointOnSphere, plates[i].center);
+                    if (dot > closestDot)
+                    {
+                        secondId = closestId;
+                        secondDot = closestDot;
+                        closestId = plates[i].id;
+                        closestDot = dot;
+                    }
+                    else if (dot > secondDot)
+                    {
+                        secondId = plates[i].id;
+                        secondDot = dot;
+                    }
+                }
+
+                float closestAngle = Mathf.Acos(Mathf.Clamp(closestDot, -1f, 1f));
+                float secondAngle = Mathf.Acos(Mathf.Clamp(secondDot, -1f, 1f));
+
+                Plate.EBoundary boundary = ClassifyBoundary(pointOnSphere, plates[closestId], plates[secondId]);
+
+                return new QResult {
+                    plateId = closestId,      plateDot = closestDot,
+                    secondPlateId = secondId, secondPlateDot = secondDot,
+                    boundaryType = boundary, boundaryMarginRadians = secondAngle - closestAngle
+                };
+            }
+            
+            private Plate.EBoundary ClassifyBoundary(Vector3 direction, Plate owner, Plate neighbor)
+            {
+                Vector3 ownerVelocity = owner.GetVelocity(direction);
+                Vector3 neighborVelocity = neighbor.GetVelocity(direction);
+                Vector3 relativeVelocity = neighborVelocity - ownerVelocity;
+
+                Vector3 separationDirection = Vector3.ProjectOnPlane(neighbor.center - owner.center, direction);
+                if (separationDirection.sqrMagnitude < 0.0001f) return Plate.EBoundary.None;
+
+                separationDirection.Normalize();
+                float boundaryMotion = Vector3.Dot(relativeVelocity, separationDirection);
+
+                if (Mathf.Abs(boundaryMotion) < 0.05f) return Plate.EBoundary.Slide;
+                if (boundaryMotion > 0f) return Plate.EBoundary.Divergent;
+                return Plate.EBoundary.Convergent;
+            }
+
+            private Vector3 GetRandomTangentDirection(Vector3 normal)
+            {
+                while (true)
+                {
+                    Vector3 random = Random.onUnitSphere;
+                    Vector3 tangent = Vector3.ProjectOnPlane(random, normal);
+                    if (tangent.sqrMagnitude > 0.0001f) return tangent.normalized;
+                }
+            }
         }
 
 
         public class Plate
         {
+            public enum EBoundary { None, Divergent, Convergent, Slide }
+            
             public int id;
             public Vector3 center;
+            public Vector3 motionDirection;
+            public Vector3 rotationAxis;
+            public float   speed;
+
+            public Vector3 GetVelocity(Vector3 pointDirection) => Vector3.Cross(rotationAxis, pointDirection) * speed;
         }
 
-        public class OwnershipMap
+        public struct QResult
         {
-            int resolution;
-            int[] ids;
-            
-            public OwnershipMap(int resolution, Plate[] plates)
-            {
-                this.resolution = resolution;
-                ids = new int[6 * resolution * resolution]; // 6 faces for cube sphere
-
-                for (int face = 0; face < 6; ++face)        // build map
-                    for (int y = 0; y < resolution; ++y)
-                        for (int x = 0; x < resolution; ++x)
-                        {
-                            Vector3 direction = GetDirection(face, x, y);
-                            ids[ GetIndex(face, x, y) ] = FindClosestPlate(direction, plates); 
-                        }
-            }
-
-            public Cubemap CreateDebugCubemap(int plateCount)
-            {
-                Cubemap cm = new Cubemap(resolution, TextureFormat.RGBA32, false);
-                cm.filterMode = FilterMode.Point;
-                cm.wrapMode = TextureWrapMode.Clamp;
-                FillFace(CubemapFace.PositiveX, 0);
-                FillFace(CubemapFace.NegativeX, 1);
-                FillFace(CubemapFace.PositiveY, 2);
-                FillFace(CubemapFace.NegativeY, 3);
-                FillFace(CubemapFace.PositiveZ, 4);
-                FillFace(CubemapFace.NegativeZ, 5);
-                cm.Apply();
-                return cm;
-
-                void FillFace(CubemapFace cubemapFace, int mapFace)
-                {
-                    var colors = new Color[resolution * resolution];
-                    for (int y = 0; y < resolution; ++y)
-                        for (int x = 0; x < resolution; ++x)
-                        {
-                            int id = ids[ GetIndex(mapFace, x, y) ];
-                            colors[y * resolution + x] = PlateColor(id);
-                        }
-                    cm.SetPixels(colors, cubemapFace);
-                }
-
-                Color PlateColor(int plateId)
-                {
-                    float hue = plateId / (float)plateCount;
-                    return Color.HSVToRGB(hue, 0.75f, 1f);
-                }
-            }
-
-            private Vector3 GetDirection(int face, int x, int y)
-            {
-                float u = ((x + 0.5f) / resolution) * 2f - 1f;
-                float v = ((y + 0.5f) / resolution) * 2f - 1f;
-                return face switch
-                {
-                    0 => new Vector3(1f, -v, -u).normalized,   // Positive X
-                    1 => new Vector3(-1f, -v, u).normalized,   // Negative X
-                    2 => new Vector3(u, 1f, v).normalized,     // Positive Y
-                    3 => new Vector3(u, -1f, -v).normalized,   // Negative Y
-                    4 => new Vector3(u, -v, 1f).normalized,    // Positive Z
-                    5 => new Vector3(-u, -v, -1f).normalized,  // Negative Z
-                    _ => throw new ArgumentException(face.ToString())
-                };
-            }
-            
-            private int FindClosestPlate(Vector3 direction, Plate[] plates)
-            {
-                int closestID = -1;
-                float closestDot = -2f;
-
-                for (int i = 0; i < plates.Length; ++i)
-                {
-                    float dot = Vector3.Dot(direction, plates[i].center);
-                    if (dot > closestDot)
-                    {
-                        closestDot = dot;
-                        closestID = plates[i].id;
-                    }
-                }
-                return closestID;
-            }
-
-            private int GetIndex(int face, int x, int y) => face * resolution * resolution + y * resolution + x;
-
+            public int   plateId;
+            public int   secondPlateId;
+            public float plateDot;
+            public float secondPlateDot;
+            public Plate.EBoundary boundaryType;
+            public float boundaryMarginRadians;
         }
+
     }
 }
