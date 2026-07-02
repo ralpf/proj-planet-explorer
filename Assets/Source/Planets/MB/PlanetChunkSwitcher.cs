@@ -24,8 +24,6 @@ namespace Planets.MB
         PlanetNode      planetNode;
         PlanetChunkPool chunkPool;
 
-        public DebugInfo debugInfo = DebugInfo.Default;
-
 
         public PlanetProfile Profile => profile;
 
@@ -120,16 +118,5 @@ namespace Planets.MB
             planetNode = null;
         }
 
-
-        [System.Serializable]
-        public struct DebugInfo
-        {
-            public int tectonicPointCount;
-            public float tectonicPointOffset;
-            public float tectonicPointSize;
-
-            public static DebugInfo Default => new DebugInfo { tectonicPointCount = 128, tectonicPointOffset = 20, tectonicPointSize = 5 };
-        }
-        
     }
 }
