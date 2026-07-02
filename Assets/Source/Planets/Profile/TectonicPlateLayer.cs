@@ -11,6 +11,7 @@ namespace Planets.Profiles
         [SerializeField] int seed = 123;
         [SerializeField, Range(2, 32)] int plateCount = 9;
         [SerializeField] Vector2 plateSpeedMinMax = new Vector2(0.2f, 1f);
+        [SerializeField] float boundaryWidthRadians = 0.05f;
 
         Data data;  // pre-computed data
 
@@ -33,6 +34,7 @@ namespace Planets.Profiles
             Plate[] plates;
 
             TectonicPlateLayer L { get; }
+            public int PlateCount => plates.Length;
 
 
             public Data(TectonicPlateLayer layer)
@@ -45,7 +47,6 @@ namespace Planets.Profiles
                 for (int i = 0; i < L.plateCount; ++i)
                 {
                     Plate plate = new();
-                    plate.id = i;
                     plate.center = Random.onUnitSphere;
                     plate.motionDirection = GetRandomTangentDirection(plate.center);
                     plate.speed = Random.Range(L.plateSpeedMinMax.x, L.plateSpeedMinMax.y);
@@ -56,12 +57,16 @@ namespace Planets.Profiles
                 Random.state = randState;
             }
 
-            public QResult Querry(Vector3 pointOnSphere)
+            public Plate GetPlate(int idx) => plates[idx];
+
+            public Vector3 GetPlateVelocity(int idx, Vector3 pointOnSphere) => GetPlate(idx).GetVelocity(pointOnSphere);
+
+            public QResult Query(Vector3 pointOnSphere)
             {
                 pointOnSphere.Normalize();
 
-                int closestId = -1;
-                int secondId = -1;
+                int closestIdx = -1;
+                int secondIdx = -1;
 
                 float closestDot = -2f;
                 float secondDot = -2f;
@@ -71,14 +76,14 @@ namespace Planets.Profiles
                     float dot = Vector3.Dot(pointOnSphere, plates[i].center);
                     if (dot > closestDot)
                     {
-                        secondId = closestId;
+                        secondIdx = closestIdx;
                         secondDot = closestDot;
-                        closestId = plates[i].id;
+                        closestIdx = i;
                         closestDot = dot;
                     }
                     else if (dot > secondDot)
                     {
-                        secondId = plates[i].id;
+                        secondIdx = i;
                         secondDot = dot;
                     }
                 }
@@ -86,15 +91,15 @@ namespace Planets.Profiles
                 float closestAngle = Mathf.Acos(Mathf.Clamp(closestDot, -1f, 1f));
                 float secondAngle = Mathf.Acos(Mathf.Clamp(secondDot, -1f, 1f));
 
-                Plate.EBoundary boundary = ClassifyBoundary(pointOnSphere, plates[closestId], plates[secondId]);
+                Plate.EBoundary boundary = ClassifyBoundary(pointOnSphere, plates[closestIdx], plates[secondIdx]);
 
                 return new QResult {
-                    plateId = closestId,      plateDot = closestDot,
-                    secondPlateId = secondId, secondPlateDot = secondDot,
+                    plateIdx = closestIdx,      plateDot = closestDot,
+                    secondPlateIdx = secondIdx, secondPlateDot = secondDot,
                     boundaryType = boundary, boundaryMarginRadians = secondAngle - closestAngle
                 };
             }
-            
+
             private Plate.EBoundary ClassifyBoundary(Vector3 direction, Plate owner, Plate neighbor)
             {
                 Vector3 ownerVelocity = owner.GetVelocity(direction);
@@ -127,24 +132,32 @@ namespace Planets.Profiles
         public class Plate
         {
             public enum EBoundary { None, Divergent, Convergent, Slide }
-            
-            public int id;
+
+            public float   speed;
             public Vector3 center;
             public Vector3 motionDirection;
             public Vector3 rotationAxis;
-            public float   speed;
 
-            public Vector3 GetVelocity(Vector3 pointDirection) => Vector3.Cross(rotationAxis, pointDirection) * speed;
+            public Vector3 GetVelocity(Vector3 pointOnSphere) => Vector3.Cross(rotationAxis, pointOnSphere) * speed;
         }
+
+
 
         public struct QResult
         {
-            public int   plateId;
-            public int   secondPlateId;
+            public int   plateIdx;
+            public int   secondPlateIdx;
             public float plateDot;
             public float secondPlateDot;
             public Plate.EBoundary boundaryType;
             public float boundaryMarginRadians;
+
+
+            public float GetBoundaryStrength01(float widthRadians)
+            {
+                if (widthRadians <= 0f) return 0f;
+                return Mathf.Clamp01(1f - boundaryMarginRadians / widthRadians);
+            }
         }
 
     }

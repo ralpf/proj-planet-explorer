@@ -66,7 +66,7 @@ namespace Planets.MB.Ed
                 Vector3 toCamera = SceneView.currentDrawingSceneView.camera.transform.position - wPos;
                 if (Vector3.Dot(worldNormal, toCamera) <= 0f) continue;
                 
-                Handles.color = GetColorFromId(data.plateId);
+                Handles.color = GetColorFromId(data.plateIdx);
                 Handles.SphereHandleCap(0, wPos, Quaternion.identity, Target.debugInfo.tectonicPointSize, EventType.Repaint);
             }
         }

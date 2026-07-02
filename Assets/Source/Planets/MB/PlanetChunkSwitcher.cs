@@ -110,7 +110,7 @@ namespace Planets.MB
 
         public object QueryTectonicLayer(Vector3 pointOnSphere)
         {
-            return Profile.Get<TectonicPlateLayer>().LayerData.Querry(pointOnSphere);
+            return Profile.Get<TectonicPlateLayer>().LayerData.Query(pointOnSphere);
         }
 
         [ContextMenu("CLEAR")]
