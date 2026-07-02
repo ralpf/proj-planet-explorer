@@ -419,6 +419,7 @@ GameObject:
   - component: {fileID: 1371579616}
   - component: {fileID: 1371579618}
   - component: {fileID: 1371579617}
+  - component: {fileID: 1371579619}
   m_Layer: 0
   m_Name: planet test
   m_TagString: Untagged
@@ -458,10 +459,6 @@ MonoBehaviour:
   maxSubdivisions: 4
   subdivisionDistance: 400
   subdivisionHysteresis: 0
-  debugInfo:
-    tectonicPointCount: 3000
-    tectonicPointOffset: 10
-    tectonicPointSize: 10
 --- !u!114 &1371579618
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -474,6 +471,21 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 3fef15659dfc5b34aaab99d880374d61, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
+--- !u!114 &1371579619
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1371579615}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 349b14ae8cf443042ab40f5fe2c4a26e, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  pointCount: 1024
+  pointOffset: 10
+  pointSize: 3
 --- !u!1 &1542242703
 GameObject:
   m_ObjectHideFlags: 0
