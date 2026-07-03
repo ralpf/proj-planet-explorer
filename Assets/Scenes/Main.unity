@@ -483,9 +483,12 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 349b14ae8cf443042ab40f5fe2c4a26e, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  pointCount: 1024
+  pointCount: 10000
   pointOffset: 10
-  pointSize: 3
+  pointSize: 5
+  boundaryWidthRadians: 0.02
+  motionDirectionScale: 120
+  enableMotionDirection: 0
 --- !u!1 &1542242703
 GameObject:
   m_ObjectHideFlags: 0

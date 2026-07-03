@@ -10,8 +10,14 @@ namespace Planets.Profiles
     {
         [SerializeField] int seed = 123;
         [SerializeField, Range(2, 32)] int plateCount = 9;
-        [SerializeField] Vector2 plateSpeedMinMax = new Vector2(0.2f, 1f);
+        [SerializeField] MinMax plateSpeedMM = new MinMax(0.2f, 1f);
         [SerializeField] float boundaryWidthRadians = 0.05f;
+        [SerializeField] float rollOceanicChance = 0.3f;
+        [SerializeField] float rollContinentalChance = 0.5f;
+        [SerializeField] MinMax oceanicAgeMM = new MinMax(0, 1);
+        [SerializeField] MinMax continentalAgeMM = new MinMax(0.5f, 1);
+        [SerializeField] MinMax oceanicThicknessMM = new MinMax(0.05f, 0.2f);
+        [SerializeField] MinMax continentalThicknessMM = new MinMax(0.5f, 1);
 
         Data data;  // pre-computed data
 
@@ -47,11 +53,35 @@ namespace Planets.Profiles
                 for (int i = 0; i < L.plateCount; ++i)
                 {
                     Plate plate = new();
+                    plates[i] = plate;
+
                     plate.center = Random.onUnitSphere;
                     plate.motionDirection = GetRandomTangentDirection(plate.center);
-                    plate.speed = Random.Range(L.plateSpeedMinMax.x, L.plateSpeedMinMax.y);
+                    plate.speed = Random.Range(L.plateSpeedMM.min, L.plateSpeedMM.max);
                     plate.rotationAxis = Vector3.Cross(plate.center, plate.motionDirection).normalized;
-                    plates[i] = plate;
+
+                    float roll = Random.value;
+                    if (roll < L.rollOceanicChance)
+                    {
+                        // oceanic crust
+                        plate.continentalAmount = new MinMax(0, 0.15f).RollRandom;
+                        plate.crustThickness = L.oceanicThicknessMM.RollRandom;
+                        plate.crustAge = L.oceanicAgeMM.RollRandom;
+                    }
+                    else if (roll < L.rollOceanicChance + L.rollContinentalChance)
+                    {
+                        // continental crust
+                        plate.continentalAmount = new MinMax(0.85f, 1f).RollRandom;
+                        plate.crustThickness = L.continentalThicknessMM.RollRandom;
+                        plate.crustAge = L.continentalAgeMM.RollRandom;
+                    }
+                    else
+                    {
+                        // mixed crust
+                        plate.continentalAmount = new MinMax(0.15f, 0.85f).RollRandom;
+                        plate.crustThickness = Mathf.Lerp(L.oceanicThicknessMM.RollRandom, L.continentalThicknessMM.RollRandom, plate.continentalAmount);
+                        plate.crustAge = Mathf.Lerp(L.oceanicAgeMM.RollRandom, L.continentalAgeMM.RollRandom, plate.continentalAmount);
+                    }
                 }
 
                 Random.state = randState;
@@ -132,11 +162,21 @@ namespace Planets.Profiles
         public class Plate
         {
             public enum EBoundary { None, Divergent, Convergent, Slide }
+            public enum ECrust    { Oceanic, Continental, Mixed }
 
             public float   speed;
             public Vector3 center;
             public Vector3 motionDirection;
             public Vector3 rotationAxis;
+            public float   continentalAmount;       // [0,1]
+            public float   crustAge;
+            public float   crustThickness;
+
+            public ECrust CrustType => continentalAmount switch {
+                < 0.2f => ECrust.Oceanic,
+                < 0.8f => ECrust.Mixed,
+                _ => ECrust.Continental
+            };
 
             public Vector3 GetVelocity(Vector3 pointOnSphere) => Vector3.Cross(rotationAxis, pointOnSphere) * speed;
         }
