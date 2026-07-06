@@ -15,5 +15,21 @@ MonoBehaviour:
   active: 1
   seed: 123
   plateCount: 20
-  ownershipMapResolution: 128
-  debugCubemap: {fileID: 0}
+  plateSpeed:
+    _min: 0.2
+    _max: 1
+  boundaryWidthRadians: 0.05
+  rollOceanicChance: 0.5
+  rollContinentalChance: 0.35
+  oceanicAge:
+    _min: 0
+    _max: 1
+  continentalAge:
+    _min: 0.5
+    _max: 1
+  oceanicThickness:
+    _min: 0.05
+    _max: 0.2
+  continentalThickness:
+    _min: 0.5
+    _max: 1

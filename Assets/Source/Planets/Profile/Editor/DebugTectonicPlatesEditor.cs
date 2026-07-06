@@ -11,7 +11,7 @@ namespace Planets.Profiles.Ed
     {
         struct Point
         {
-            public Vector3 wpos;
+            public Vector3 pos;
             public Vector3 normal;
             public Color color;
         }
@@ -48,6 +48,11 @@ namespace Planets.Profiles.Ed
                 mode = 1;
                 OnParametersChanged();
             }
+            if (GUILayout.Button(("Show Crust Type")))
+            {
+                mode = 2;
+                OnParametersChanged();
+            }
         }
 
 
@@ -71,6 +76,7 @@ namespace Planets.Profiles.Ed
 
             if (mode == 0) PreparePlatesData();
             else if (mode == 1) PrepareBorderData();
+            else if (mode == 2) PrepareCrustData();
             else throw new System.NotImplementedException();
 
             void PrepareBorderData()
@@ -78,8 +84,8 @@ namespace Planets.Profiles.Ed
                 for (int i = 0; i < count; ++i)
                 {
                     Vector3 pointOnSphere = GetSamplePoint(i, count);
-                    pointArr[i].wpos = Target.transform.TransformPoint(pointOnSphere * (Target.Profile.Radius + Target.pointOffset));
-                    pointArr[i].normal = pointArr[i].wpos.normalized;
+                    pointArr[i].pos = pointOnSphere * (Target.Profile.Radius + Target.pointOffset);
+                    pointArr[i].normal = pointArr[i].pos.normalized;
                     var queryResult = data.Query(pointOnSphere);
                     pointArr[i].color = GetColorFromBorder(queryResult.boundaryType);
                     if (queryResult.boundaryMarginRadians > Target.boundaryWidthRadians) pointArr[i].color = Color.black;
@@ -91,10 +97,22 @@ namespace Planets.Profiles.Ed
                 for (int i = 0; i < count; ++i)
                 {
                     Vector3 pointOnSphere = GetSamplePoint(i, count);
-                    pointArr[i].wpos = Target.transform.TransformPoint(pointOnSphere * (Target.Profile.Radius + Target.pointOffset));
-                    pointArr[i].normal = pointArr[i].wpos.normalized;
+                    pointArr[i].pos = pointOnSphere * (Target.Profile.Radius + Target.pointOffset);
+                    pointArr[i].normal = pointArr[i].pos.normalized;
                     var queryResult = data.Query(pointOnSphere);
-                    pointArr[i].color = GetColorFromIdx(queryResult.plateIdx);
+                    pointArr[i].color = GetColorFromPlateIdx(queryResult.plateIdx);
+                }
+            }
+
+            void PrepareCrustData()
+            {
+                for (int i = 0; i < count; ++i)
+                {
+                    Vector3 pointOnSphere = GetSamplePoint(i, count);
+                    pointArr[i].pos = pointOnSphere * (Target.Profile.Radius + Target.pointOffset);
+                    pointArr[i].normal = pointArr[i].pos.normalized;
+                    var queryResult = data.Query(pointOnSphere);
+                    pointArr[i].color = GetColorFromCrustType(queryResult.plate.CrustType);
                 }
             }
         }
@@ -103,12 +121,19 @@ namespace Planets.Profiles.Ed
         private void DrawPointArray()
         {
             if (pointArr == null || pointArr.Length == 0) return;
-            Vector3 cameraWorldPos = SceneView.currentDrawingSceneView.camera.transform.position;
+            Camera cam = SceneView.currentDrawingSceneView.camera;
+            Vector3 cameraWorldPos = cam.transform.position;
 
             for (int i = 0; i < pointArr.Length; ++i)
             {
-                Vector3 wpos = Target.transform.TransformPoint(pointArr[i].wpos);
-                Vector3 norm = Target.transform.TransformPoint(pointArr[i].normal);
+                Vector3 wpos = Target.transform.TransformPoint(pointArr[i].pos);
+                Vector3 norm = Target.transform.TransformDirection(pointArr[i].normal).normalized;
+                
+                Vector3 viewportPos = cam.WorldToViewportPoint(wpos);
+                if (viewportPos.z <= 0f) continue;
+                if (viewportPos.x < 0f || viewportPos.x > 1f) continue;
+                if (viewportPos.y < 0f || viewportPos.y > 1f) continue;
+                
                 Vector3 toCamera    = cameraWorldPos - wpos;
                 if (Vector3.Dot(norm, toCamera) <= 0f) continue;
 
@@ -128,13 +153,13 @@ namespace Planets.Profiles.Ed
                 var plate = data.GetPlate(i);
                 Vector3 lpos = plate.center * (Target.Profile.Radius + Target.pointOffset);
                 Vector3 wpos = Target.transform.TransformPoint(lpos);
-                Vector3 norm = Target.transform.TransformPoint(lpos.normalized);
+                Vector3 norm = Target.transform.TransformDirection(lpos.normalized).normalized;
                 Vector3 wposEnd = Target.transform.TransformPoint(lpos + plate.motionDirection * Target.motionDirectionScale);
                 Vector3 toCamera    = cameraWorldPos - wpos;
                 if (Vector3.Dot(norm, toCamera) <= 0f) continue;
 
                 var queryResult = data.Query(plate.center);
-                Handles.color = GetColorFromIdx(queryResult.plateIdx);
+                Handles.color = GetColorFromPlateIdx(queryResult.plateIdx);
                 Handles.DrawWireCube(wpos, Vector3.one * 10);
                 Handles.DrawLine(wpos, wposEnd);
                 Handles.ArrowHandleCap(0, wposEnd, Quaternion.LookRotation((wposEnd - wpos).normalized), 60, EventType.Repaint);
@@ -156,10 +181,19 @@ namespace Planets.Profiles.Ed
             return new Vector3(x, y, z).normalized;
         }
 
-        private static Color GetColorFromIdx(int id)
+        private static Color GetColorFromPlateIdx(int id)
         {
             float hue = Mathf.Repeat(id * 0.61803398875f, 1f);
             return Color.HSVToRGB(hue, 0.75f, 1f);
+        }
+
+        private static Color GetColorFromCrustType(TectonicPlateLayer.Plate.ECrust crust)
+        {
+            return crust switch {
+                TectonicPlateLayer.Plate.ECrust.Continental => Color.green,
+                TectonicPlateLayer.Plate.ECrust.Oceanic => Color.cyan,
+                TectonicPlateLayer.Plate.ECrust.Mixed => Color.yellow
+            };
         }
 
         private static Color GetColorFromBorder(TectonicPlateLayer.Plate.EBoundary border)

@@ -10,14 +10,14 @@ namespace Planets.Profiles
     {
         [SerializeField] int seed = 123;
         [SerializeField, Range(2, 32)] int plateCount = 9;
-        [SerializeField] MinMax plateSpeedMM = new MinMax(0.2f, 1f);
+        [SerializeField] MinMax plateSpeed = new MinMax(0.2f, 1f);
         [SerializeField] float boundaryWidthRadians = 0.05f;
         [SerializeField] float rollOceanicChance = 0.3f;
         [SerializeField] float rollContinentalChance = 0.5f;
-        [SerializeField] MinMax oceanicAgeMM = new MinMax(0, 1);
-        [SerializeField] MinMax continentalAgeMM = new MinMax(0.5f, 1);
-        [SerializeField] MinMax oceanicThicknessMM = new MinMax(0.05f, 0.2f);
-        [SerializeField] MinMax continentalThicknessMM = new MinMax(0.5f, 1);
+        [SerializeField] MinMax oceanicAge = new MinMax(0, 1);
+        [SerializeField] MinMax continentalAge = new MinMax(0.5f, 1);
+        [SerializeField] MinMax oceanicThickness = new MinMax(0.05f, 0.2f);
+        [SerializeField] MinMax continentalThickness = new MinMax(0.5f, 1);
 
         Data data;  // pre-computed data
 
@@ -57,7 +57,7 @@ namespace Planets.Profiles
 
                     plate.center = Random.onUnitSphere;
                     plate.motionDirection = GetRandomTangentDirection(plate.center);
-                    plate.speed = Random.Range(L.plateSpeedMM.min, L.plateSpeedMM.max);
+                    plate.speed = Random.Range(L.plateSpeed.min, L.plateSpeed.max);
                     plate.rotationAxis = Vector3.Cross(plate.center, plate.motionDirection).normalized;
 
                     float roll = Random.value;
@@ -65,22 +65,22 @@ namespace Planets.Profiles
                     {
                         // oceanic crust
                         plate.continentalAmount = new MinMax(0, 0.15f).RollRandom;
-                        plate.crustThickness = L.oceanicThicknessMM.RollRandom;
-                        plate.crustAge = L.oceanicAgeMM.RollRandom;
+                        plate.crustThickness = L.oceanicThickness.RollRandom;
+                        plate.crustAge = L.oceanicAge.RollRandom;
                     }
                     else if (roll < L.rollOceanicChance + L.rollContinentalChance)
                     {
                         // continental crust
                         plate.continentalAmount = new MinMax(0.85f, 1f).RollRandom;
-                        plate.crustThickness = L.continentalThicknessMM.RollRandom;
-                        plate.crustAge = L.continentalAgeMM.RollRandom;
+                        plate.crustThickness = L.continentalThickness.RollRandom;
+                        plate.crustAge = L.continentalAge.RollRandom;
                     }
                     else
                     {
                         // mixed crust
                         plate.continentalAmount = new MinMax(0.15f, 0.85f).RollRandom;
-                        plate.crustThickness = Mathf.Lerp(L.oceanicThicknessMM.RollRandom, L.continentalThicknessMM.RollRandom, plate.continentalAmount);
-                        plate.crustAge = Mathf.Lerp(L.oceanicAgeMM.RollRandom, L.continentalAgeMM.RollRandom, plate.continentalAmount);
+                        plate.crustThickness = Mathf.Lerp(L.oceanicThickness.RollRandom, L.continentalThickness.RollRandom, plate.continentalAmount);
+                        plate.crustAge = Mathf.Lerp(L.oceanicAge.RollRandom, L.continentalAge.RollRandom, plate.continentalAmount);
                     }
                 }
 
@@ -126,7 +126,8 @@ namespace Planets.Profiles
                 return new QResult {
                     plateIdx = closestIdx,      plateDot = closestDot,
                     secondPlateIdx = secondIdx, secondPlateDot = secondDot,
-                    boundaryType = boundary, boundaryMarginRadians = secondAngle - closestAngle
+                    boundaryType = boundary, boundaryMarginRadians = secondAngle - closestAngle,
+                    plate = plates[closestIdx]
                 };
             }
 
@@ -191,6 +192,7 @@ namespace Planets.Profiles
             public float secondPlateDot;
             public Plate.EBoundary boundaryType;
             public float boundaryMarginRadians;
+            public Plate plate;
 
 
             public float GetBoundaryStrength01(float widthRadians)
