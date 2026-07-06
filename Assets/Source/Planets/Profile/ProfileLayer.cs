@@ -9,7 +9,7 @@ namespace Planets.Profiles
     {
         public bool active = true;
 
-        public abstract void Evaluate(ref Sample sample);
+        public abstract float Evaluate(Vector3 pointOnSphere);
         public abstract void Initialize();
     }
 }

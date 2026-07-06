@@ -96,19 +96,13 @@ namespace Planets.MB
         public void Generate()
         {
             this.Clear();
+            profile.Initialize();
             // make logical nodes
             planetNode = new PlanetNode();
             
             // make unity objects
             foreach (FaceNode faceNode in planetNode.Faces)
                 chunkPool.Add(faceNode.RootChunk);
-
-            profile.Initialize();
-        }
-
-        public object QueryTectonicLayer(Vector3 pointOnSphere)
-        {
-            return Profile.Get<TectonicPlateLayer>().LayerData.Query(pointOnSphere);
         }
 
         [ContextMenu("CLEAR")]

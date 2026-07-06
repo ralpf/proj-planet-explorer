@@ -27,13 +27,12 @@ namespace Planets.Profiles
 
         public float GetElevation(Vector3 pointOnSphere)
         {
-            float elevation = 0f;
+            float elevation = 0;
 
-            elevation += Mathf.Sin(Vector3.Dot(pointOnSphere, new Vector3(1.0f, 0.4f, 0.2f)) * noiseScale);
-            elevation += Mathf.Sin(Vector3.Dot(pointOnSphere, new Vector3(0.3f, 1.0f, 0.7f)) * noiseScale * 1.7f) * 0.5f;
-            elevation += Mathf.Sin(Vector3.Dot(pointOnSphere, new Vector3(0.6f, 0.2f, 1.0f)) * noiseScale * 2.3f) * 0.25f;
+            foreach (var layer in layers)
+                elevation += layer.Evaluate(pointOnSphere);
 
-            return elevation * heighMult;
+            return elevation * heighMult + Radius;
         }
 
         public void Initialize()

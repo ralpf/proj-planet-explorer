@@ -24,9 +24,10 @@ namespace Planets.Profiles
         public Data LayerData => data;
 
 
-        public override void Evaluate(ref Sample sample)
+        public override float Evaluate(Vector3 pointOnSphere)
         {
-            throw new System.NotImplementedException();
+            var queryResult = data.Query(pointOnSphere);
+            return queryResult.plate.crustThickness;
         }
 
         public override void Initialize()
@@ -186,13 +187,13 @@ namespace Planets.Profiles
 
         public struct QResult
         {
+            public Plate plate;
             public int   plateIdx;
             public int   secondPlateIdx;
             public float plateDot;
             public float secondPlateDot;
             public Plate.EBoundary boundaryType;
             public float boundaryMarginRadians;
-            public Plate plate;
 
 
             public float GetBoundaryStrength01(float widthRadians)
