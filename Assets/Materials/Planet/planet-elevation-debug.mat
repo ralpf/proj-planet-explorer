@@ -89,7 +89,7 @@ Material:
     - _ClearCoatMask: 0
     - _ClearCoatSmoothness: 0
     - _ContourStep: 2
-    - _ContourStrength: 0.856
+    - _ContourStrength: 0.43
     - _Cull: 2
     - _Cutoff: 0.5
     - _DetailAlbedoMapScale: 1
@@ -100,14 +100,14 @@ Material:
     - _GlossMapScale: 0
     - _Glossiness: 0
     - _GlossyReflections: 0
-    - _MaxElevation: 20
+    - _MaxElevation: 1181.8
     - _Metallic: 0
     - _MinElevation: -5
     - _OcclusionStrength: 1
     - _Parallax: 0.005
     - _QueueOffset: 0
     - _ReceiveShadows: 1
-    - _SeaRadius: 637
+    - _SeaRadius: 685.32
     - _Smoothness: 0.5
     - _SmoothnessTextureChannel: 0
     - _SpecularHighlights: 1
