@@ -3,6 +3,7 @@ using System.Collections;
 using System.Collections.Generic;
 using System.Linq;
 using Extensions.UnityAPI;
+using Planets.Data.Runtime;
 using Planets.DataBuffers;
 using Planets.LogicalTree;
 using Planets.Profiles;
@@ -16,19 +17,22 @@ namespace Planets.MB
     public class PlanetChunkPool : MonoBehaviour
     {
         PlanetProfile profile;
+        PlanetRuntimeData runtimeData;
         Stack<PlanetChunk> pool = new();
         Dictionary<ChunkNode, PlanetChunk> active = new();
 
 
         void Awake()
         {
-            profile = this.GetComponentAsserted<PlanetChunkSwitcher>().Profile;
+            var root = this.GetComponentAsserted<PlanetChunkSwitcher>(); 
+            profile = root.Profile;
+            runtimeData = root.RuntimeData;
         }
 
         public void Add(ChunkNode chunk)
         {
             PlanetChunk uobj = pool.Count > 0 ? pool.Pop() : CreateNew();
-            uobj.Recalculate(new PlanetChunkData(chunk, profile));
+            uobj.Recalculate(new PlanetChunkData(chunk, profile, runtimeData));
             uobj.SetMaterial(profile.Material);
             uobj.Active = true;
             uobj.name = $"Planet Chunk L{chunk.SubdivisionLevel}";

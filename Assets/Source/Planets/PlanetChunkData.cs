@@ -1,6 +1,7 @@
 // ReSharper disable CheckNamespace
 using System.Collections;
 using System.Collections.Generic;
+using Planets.Data.Runtime;
 using Planets.LogicalTree;
 using Planets.Profiles;
 using UnityEngine;
@@ -17,7 +18,7 @@ namespace Planets.DataBuffers
 
 
 
-        public PlanetChunkData(ChunkNode chunkNode, PlanetProfile profile)
+        public PlanetChunkData(ChunkNode chunkNode, PlanetProfile profile, PlanetRuntimeData runtimeData)
         {
             int vertexCount = profile.Resolution * profile.Resolution;
 
@@ -52,7 +53,7 @@ namespace Planets.DataBuffers
                         + (faceUv.y - 0.5f) * 2.0f * axisB;
 
                     Vector3 pointOnSphere = pointOnCube.normalized;
-                    float elevation = profile.GetElevation(pointOnSphere);
+                    float elevation = runtimeData.GetElevation(pointOnSphere);
 
                     vertices[vertexIndex] = pointOnSphere * (profile.Radius + elevation);
                     //normals[vertexIndex]  = pointOnSphere;

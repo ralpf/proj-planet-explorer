@@ -2,6 +2,7 @@ using System;
 using System.Collections;
 using System.Collections.Generic;
 using Extensions.UnityAPI;
+using Planets.Data.Runtime;
 using Planets.DataBuffers;
 using UnityEngine;
 using Planets.Profiles;
@@ -26,6 +27,7 @@ namespace Planets.MB
 
 
         public PlanetProfile Profile => profile;
+        public PlanetRuntimeData RuntimeData { get; private set; }
 
 
 
@@ -96,7 +98,7 @@ namespace Planets.MB
         public void Generate()
         {
             this.Clear();
-            profile.Initialize();
+            RuntimeData = new PlanetRuntimeData(profile);
             // make logical nodes
             planetNode = new PlanetNode();
             
