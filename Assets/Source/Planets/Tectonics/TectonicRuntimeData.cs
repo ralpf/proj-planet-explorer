@@ -12,6 +12,7 @@ namespace Planets.Data.Runtime
         Plate[] plates;
         
         TectonicSettings S => CastSettings<TectonicSettings>();
+        public int PlateCount => plates.Length;
 
 
         public TectonicRuntimeData(TectonicSettings settings) : base(settings)
@@ -56,19 +57,25 @@ namespace Planets.Data.Runtime
 
             Random.state = randState;
         }
-        
-        public Vector3 GetPlateVelocity(int idx, Vector3 pointOnSphere) => plates[idx].GetVelocity(pointOnSphere);
-        
-        public QResult Query(Vector3 pointOnSphere)
-        {
-            pointOnSphere.Normalize();
 
-            int closestIdx = -1, secondIdx = -1;
+        public Plate GetPlate(int idx) => plates[idx];
+        
+        public override float Evaluate(Vector3 pointOnSphere)
+        {
+            // this method is has to be rewritten to not use full sampling
+            var sample = new PlanetSample(pointOnSphere);
+            this.Sample(sample);
+            return sample.tectonics.crustThickness;
+        }
+
+        public override void Sample(PlanetSample result)
+        {
+            int   closestIdx = -1,  secondIdx = -1;
             float closestDot = -2f, secondDot = -2f;
 
             for (int i = 0; i < plates.Length; ++i)
             {
-                float dot = Vector3.Dot(pointOnSphere, plates[i].center);
+                float dot = Vector3.Dot(result.pointOnSphere, plates[i].center);
                 if (dot > closestDot)
                 {
                     secondIdx = closestIdx;
@@ -84,23 +91,16 @@ namespace Planets.Data.Runtime
             }
 
             float closestAngle = Mathf.Acos(Mathf.Clamp(closestDot, -1f, 1f));
-            float secondAngle = Mathf.Acos(Mathf.Clamp(secondDot, -1f, 1f));
+            float secondAngle  = Mathf.Acos(Mathf.Clamp(secondDot, -1f, 1f));
 
-            Plate.EBoundary boundary = ClassifyBoundary(pointOnSphere, plates[closestIdx], plates[secondIdx]);
-
-            return new QResult
+            result.tectonics = new PlanetSample.Tectonics
             {
-                plateIdx = closestIdx, plateDot = closestDot,
-                secondPlateIdx = secondIdx, secondPlateDot = secondDot,
-                boundaryType = boundary, boundaryMarginRadians = secondAngle - closestAngle,
-                crushtThickness = plates[closestIdx].crustThickness
+                plateIdx = closestIdx,
+                boundaryMarginRadians = secondAngle - closestAngle,
+                crustType = plates[closestIdx].CrustType,
+                crustThickness = plates[closestIdx].crustThickness,
+                boundaryType = ClassifyBoundary(result.pointOnSphere, plates[closestIdx], plates[secondIdx]),
             };
-        }
-
-        public override float Evaluate(Vector3 pointOnSphere)
-        {
-            var q = Query(pointOnSphere);
-            return q.crushtThickness;
         }
 
         private Vector3 GetRandomTangentDirection(Vector3 normal)

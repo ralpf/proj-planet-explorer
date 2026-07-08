@@ -16,6 +16,5 @@ MonoBehaviour:
   resolution: 16
   material: {fileID: 2100000, guid: 6d60f55d533b41442a8fd24a5f9b6bad, type: 2}
   heighMult: 100
-  noiseScale: 10
   layers:
   - {fileID: 11400000, guid: fbda86c7f9cf664459d691de0a2a2b15, type: 2}

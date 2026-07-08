@@ -15,8 +15,6 @@ namespace Planets.Profiles
 
         [Space]
         [SerializeField] float heighMult = 1f;
-        [SerializeField] float noiseScale = 2f;
-
         [SerializeField] LayerSettingsAsset[] layers;
 
         //......................................................................................PROPERTY

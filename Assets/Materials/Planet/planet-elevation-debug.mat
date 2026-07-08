@@ -100,7 +100,7 @@ Material:
     - _GlossMapScale: 0
     - _Glossiness: 0
     - _GlossyReflections: 0
-    - _MaxElevation: 1181.8
+    - _MaxElevation: 75
     - _Metallic: 0
     - _MinElevation: -5
     - _OcclusionStrength: 1

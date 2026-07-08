@@ -16,24 +16,21 @@ namespace Planets.MB
     [RequireComponent(typeof(PlanetChunkSwitcher))]
     public class PlanetChunkPool : MonoBehaviour
     {
-        PlanetProfile profile;
-        PlanetRuntimeData runtimeData;
         Stack<PlanetChunk> pool = new();
         Dictionary<ChunkNode, PlanetChunk> active = new();
+        PlanetChunkSwitcher root;
 
 
         void Awake()
         {
-            var root = this.GetComponentAsserted<PlanetChunkSwitcher>(); 
-            profile = root.Profile;
-            runtimeData = root.RuntimeData;
+            root = this.GetComponentAsserted<PlanetChunkSwitcher>(); 
         }
 
         public void Add(ChunkNode chunk)
         {
             PlanetChunk uobj = pool.Count > 0 ? pool.Pop() : CreateNew();
-            uobj.Recalculate(new PlanetChunkData(chunk, profile, runtimeData));
-            uobj.SetMaterial(profile.Material);
+            uobj.Recalculate(new PlanetChunkData(chunk, root.Profile, root.RuntimeData));
+            uobj.SetMaterial(root.Profile.Material);
             uobj.Active = true;
             uobj.name = $"Planet Chunk L{chunk.SubdivisionLevel}";
             active.Add(chunk, uobj);

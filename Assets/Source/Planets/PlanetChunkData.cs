@@ -20,6 +20,10 @@ namespace Planets.DataBuffers
 
         public PlanetChunkData(ChunkNode chunkNode, PlanetProfile profile, PlanetRuntimeData runtimeData)
         {
+            Debug.Assert(chunkNode != null);
+            Debug.Assert(profile != null);
+            Debug.Assert(runtimeData != null);
+
             int vertexCount = profile.Resolution * profile.Resolution;
 
             Vector3[] vertices = new Vector3[vertexCount];

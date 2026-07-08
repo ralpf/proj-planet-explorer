@@ -30,18 +30,24 @@ namespace Planets.Data.Runtime
         {
             foreach (LayerRuntimeData data in dataLayers)
                 if (data is T tdata) return tdata;
-
+        
             throw new System.InvalidOperationException($"unexpected type {typeof(T).Name}");
         }
 
         public float GetElevation(Vector3 pointOnSphere)
         {
             float elevation = 0;
-            
             foreach (LayerRuntimeData layer in dataLayers)
                 elevation += layer.Evaluate(pointOnSphere);
-            
-            return elevation * profile.HeightMult + profile.Radius;
+            return elevation * profile.HeightMult;
+        }
+
+        public PlanetSample GetFullSample(Vector3 pointOnSphere)
+        {
+            PlanetSample sample = new(pointOnSphere);
+            foreach (LayerRuntimeData layer in dataLayers)
+                layer.Sample(sample);
+            return sample;
         }
 
         private LayerRuntimeData InstantiateLayerData(LayerSettings layer)

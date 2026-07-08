@@ -1,4 +1,5 @@
 using System;
+using Planets.Data.Runtime;
 using UnityEngine;
 using Planets.MB;
 
@@ -17,7 +18,7 @@ namespace Planets.Profiles
         public bool enableMotionDirection = false;
 
         public PlanetProfile Profile => this.GetComponent<PlanetChunkSwitcher>().Profile;
-        //public TectonicPlateLayer TectonicLayer => Profile.Get<TectonicPlateLayer>();
+        public PlanetRuntimeData RuntimeData => this.GetComponent<PlanetChunkSwitcher>().RuntimeData;
 
         public event Action OnChanged;
 

@@ -19,5 +19,6 @@ namespace Planets.Data.Runtime
         }
 
         public abstract float Evaluate(Vector3 pointOnSphere);
+        public abstract void  Sample(PlanetSample result);
     }
 }
