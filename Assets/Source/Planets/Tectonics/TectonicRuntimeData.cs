@@ -172,7 +172,7 @@ namespace Planets.Data.Runtime
         public int   secondPlateIdx;
         public float plateDot;
         public float secondPlateDot;
-        public float crushtThickness;
+        public float crustThickness;
         public Plate.EBoundary boundaryType;
         public float boundaryMarginRadians;
 
