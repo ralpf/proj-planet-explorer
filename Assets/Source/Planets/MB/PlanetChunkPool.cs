@@ -29,7 +29,7 @@ namespace Planets.MB
         public void Add(ChunkNode chunk)
         {
             PlanetChunk uobj = pool.Count > 0 ? pool.Pop() : CreateNew();
-            uobj.Recalculate(new PlanetChunkData(chunk, root.Profile, root.RuntimeData));
+            uobj.Recalculate(new PlanetChunkData(chunk, root.Profile.Resolution, root.RuntimeData));
             uobj.SetMaterial(root.Profile.Material);
             uobj.Active = true;
             uobj.name = $"Planet Chunk L{chunk.SubdivisionLevel}";

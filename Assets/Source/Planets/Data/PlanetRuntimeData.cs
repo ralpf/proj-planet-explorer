@@ -39,7 +39,8 @@ namespace Planets.Data.Runtime
             float elevation = 0;
             foreach (LayerRuntimeData layer in dataLayers)
                 elevation += layer.Evaluate(pointOnSphere);
-            return elevation * profile.HeightMult;
+
+            return elevation * profile.HeightMult + profile.Radius;
         }
 
         public PlanetSample GetFullSample(Vector3 pointOnSphere)
