@@ -1,8 +1,9 @@
+using System;
 using System.Collections;
 using System.Collections.Generic;
 using Planets.Profiles.Settings;
 using UnityEngine;
-
+using Random = UnityEngine.Random;
 
 
 namespace Planets.Data.Runtime
@@ -10,17 +11,19 @@ namespace Planets.Data.Runtime
     public class TectonicRuntimeData : LayerRuntimeData
     {
         Plate[] plates;
-        
-        TectonicSettings S => CastSettings<TectonicSettings>();
+        float maxCrustThickness;
+
         public int PlateCount => plates.Length;
 
 
-        public TectonicRuntimeData(TectonicSettings settings) : base(settings)
+        public TectonicRuntimeData(TectonicSettings S) : base(S)
         {
             var randState = Random.state;
             Random.InitState(S.seed);
 
             plates = new Plate[S.plateCount];
+            maxCrustThickness = S.scaleFactor * S.Profile.Radius / 1000f; 
+
             for (int i = 0; i < S.plateCount; ++i)
             {
                 Plate plate = new();
@@ -32,30 +35,35 @@ namespace Planets.Data.Runtime
                 plate.rotationAxis = Vector3.Cross(plate.center, plate.motionDirection).normalized;
 
                 float roll = Random.value;
-                if (roll < S.rollOceanicChance)
+
+                if (roll < S.rollOceanicChance)                                     // oceanic plate
+                    FillCrustData(plate, new MinMax(0, 0.15f), S.oceanicThickness, S.oceanicAge);
+                else if (roll < S.rollOceanicChance + S.rollContinentalChance)      // continental plate
+                    FillCrustData(plate, new MinMax(0.85f, 1f), S.continentalThickness, S.continentalAge);
+                else                                                                // mixed plate
                 {
-                    // oceanic crust
-                    plate.continentalAmount = new MinMax(0, 0.15f).RollRandom;
-                    plate.crustThickness = S.oceanicThickness.RollRandom;
-                    plate.crustAge = S.oceanicAge.RollRandom;
+                    MinMax mixedContinental = new(0.15f, 0.85f);
+                    MinMax mixedThickness = new(
+                        Mathf.Lerp(S.oceanicThickness.m, S.continentalThickness.m, mixedContinental.m),
+                        Mathf.Lerp(S.oceanicThickness.M, S.continentalThickness.M, mixedContinental.M));
+                    MinMax mixedAge = new(
+                        Mathf.Lerp(S.oceanicAge.m, S.continentalAge.m, mixedContinental.m),
+                        Mathf.Lerp(S.oceanicAge.M, S.continentalAge.M, mixedContinental.M));
+
+                    FillCrustData(plate, mixedContinental, mixedThickness, mixedAge);
                 }
-                else if (roll < S.rollOceanicChance + S.rollContinentalChance)
-                {
-                    // continental crust
-                    plate.continentalAmount = new MinMax(0.85f, 1f).RollRandom;
-                    plate.crustThickness = S.continentalThickness.RollRandom;
-                    plate.crustAge = S.continentalAge.RollRandom;
-                }
-                else
-                {
-                    // mixed crust
-                    plate.continentalAmount = new MinMax(0.15f, 0.85f).RollRandom;
-                    plate.crustThickness = Mathf.Lerp(S.oceanicThickness.RollRandom, S.continentalThickness.RollRandom, plate.continentalAmount);
-                    plate.crustAge = Mathf.Lerp(S.oceanicAge.RollRandom, S.continentalAge.RollRandom, plate.continentalAmount);
-                }
+                
             }
 
             Random.state = randState;
+
+            void FillCrustData(Plate plate, MinMax continental, MinMax thickness, MinMax age)
+            {
+                plate.continentalAmount = continental.RollRandom;
+                plate.crustThickness = thickness.RollRandom;
+                plate.crustAge = age.RollRandom;
+                plate.elevationOffset = (plate.crustThickness - S.baseThickness) * maxCrustThickness;
+            }
         }
 
         public Plate GetPlate(int idx) => plates[idx];
@@ -65,7 +73,7 @@ namespace Planets.Data.Runtime
             // this method is has to be rewritten to not use full sampling
             var sample = new PlanetSample(pointOnSphere);
             this.Sample(sample);
-            return sample.tectonics.crustThickness;
+            return sample.tectonics.elevationOffset;
         }
 
         public override void Sample(PlanetSample result)
@@ -98,8 +106,8 @@ namespace Planets.Data.Runtime
                 plateIdx = closestIdx,
                 boundaryMarginRadians = secondAngle - closestAngle,
                 crustType = plates[closestIdx].CrustType,
-                crustThickness = plates[closestIdx].crustThickness,
                 boundaryType = ClassifyBoundary(result.pointOnSphere, plates[closestIdx], plates[secondIdx]),
+                elevationOffset = plates[closestIdx].elevationOffset,
             };
         }
 
@@ -148,6 +156,7 @@ namespace Planets.Data.Runtime
         public float   continentalAmount;       // [0,1]
         public float   crustAge;
         public float   crustThickness;
+        public float   elevationOffset;
 
         public ECrust CrustType => GetCrustType(); 
         public Vector3 GetVelocity(Vector3 pointOnSphere) => Vector3.Cross(rotationAxis, pointOnSphere) * speed;

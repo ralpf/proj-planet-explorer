@@ -1,10 +1,7 @@
-using System.Collections;
-using System.Collections.Generic;
 using System.Linq;
+using UnityEngine;
 using Planets.Profiles;
 using Planets.Profiles.Settings;
-using Planets.Profiles.Settings.Assets;
-using UnityEngine;
 
 
 
@@ -45,7 +42,7 @@ namespace Planets.Data.Runtime
 
         public PlanetSample GetFullSample(Vector3 pointOnSphere)
         {
-            PlanetSample sample = new(pointOnSphere);
+            var sample = new PlanetSample(pointOnSphere);
             foreach (LayerRuntimeData layer in dataLayers)
                 layer.Sample(sample);
             return sample;
@@ -53,6 +50,7 @@ namespace Planets.Data.Runtime
 
         private LayerRuntimeData InstantiateLayerData(LayerSettings layer)
         {
+            layer.SetParentProfile(profile);
             return layer switch
             {
                 TectonicSettings s => new TectonicRuntimeData(s),

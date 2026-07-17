@@ -23,7 +23,7 @@ namespace Planets.Data.Runtime
         {
             public int plateIdx;
             public float boundaryMarginRadians;
-            public float crustThickness;
+            public float elevationOffset;
             public Plate.EBoundary boundaryType;
             public Plate.ECrust crustType;
         }
